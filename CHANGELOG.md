@@ -1,5 +1,9 @@
 # RemindMe
 
+## 0.1.1
+
+- Reworded the addon description in the AddOns list and the options panel.
+
 ## 0.1.0
 
 First release, for WoW Forever (Interface 16001).
