@@ -63,14 +63,14 @@ local function showHelp()
     sub("when", "at 5pm, 17:30, noon, in 20 min, 10m, 1h30m, tomorrow, friday at 9am")
     sub("where", "when I get to Orgrimmar, next time I'm in org, at a trainer / mailbox / bank / AH")
     sub("repeat", "always at 9am, every friday at 7pm, every 2h, daily, whenever I get to org")
-    sub("priority", "quietly (low), urgent or ! (high)")
+    sub("priority", "-L or quietly (low), -M (normal), -H, urgent or ! (high)")
     sub("e.g.", B .. "/remind me to buy potions at 12pm" .. R)
     sub("e.g.", B .. "/remind when I get to Orgrimmar, upgrade my weapon skill" .. R)
     cmd("/remind list", "your reminders and their letter codes")
     cmd("/remind done <code>", "complete one, e.g. /remind done b (repeating: dismiss this alert)")
     cmd("/remind delete <code>", "delete one (stops a repeating one)")
     cmd("/remind snooze [code] [time]", "snooze (default 10 min)")
-    cmd("/remind priority <code> <low / normal / high>", "change priority")
+    cmd("/remind priority <code> <L / M / H>", "change priority (low / normal / high also work)")
     cmd("/remind clear", "remove fired reminders")
     cmd("/remind clock <local / server>", "which clock times use")
     cmd("/remind options", "open settings")
@@ -218,11 +218,12 @@ local function handle(msg)
         end
         ns.Print("clock: |cffffffff" .. ns.Clock.Mode() .. "|r (now " ..
             ns.Clock.Describe(ns.Clock.Now()) .. ")")
-    elseif lower:match("^priority%s+%a+%s+%a+$") or lower:match("^pri%s+%a+%s+%a+$") then
-        local code, p = lower:match("^%a+%s+(%a+)%s+(%a+)$")
+    elseif lower:match("^priority%s+%a+%s+%-?%a+$") or lower:match("^pri%s+%a+%s+%-?%a+$") then
+        local code, p = lower:match("^%a+%s+(%a+)%s+(%-?%a+)$")
         if p == "quiet" then p = "low" elseif p == "loud" or p == "urgent" then p = "high" end
-        if not ns.PRIORITY_RANK[p] then
-            ns.Print("priority must be low, normal or high.")
+        p = ns.Parser.PriorityWord(p) -- low / normal / high, l / m / n / h, -h, med...
+        if not p then
+            ns.Print("priority must be low / normal / high, or L / M / H.")
             return
         end
         withCode(code, function(r)

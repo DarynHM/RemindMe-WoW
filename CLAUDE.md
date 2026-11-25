@@ -48,6 +48,7 @@ Saved variables: `RemindMeDB` (account settings) and `RemindMeCharDB` (per-chara
 **Priorities**
 - Low, Normal and High; Normal is the default.
 - Set them with words: quietly / low priority, urgent / important / loudly / high priority / asap. `!` alone, or leading the text, means High.
+- Shorthand flags, standalone anywhere, any case: `-L` / `-low`; `-M` / `-N` / `-med` / `-medium` / `-normal`; `-H` / `-high`. Flags are checked first. `Parser.PriorityWord` maps the same words (with or without the dash) for `/remind priority <code> <word>`.
 - quiet / loud / silent only count as the first or last word.
 - Each priority has its own profile: chat, raid warning, sound, icon animation, edge flash, taskbar flash.
 
@@ -96,7 +97,7 @@ Saved variables: `RemindMeDB` (account settings) and `RemindMeCharDB` (per-chara
 
 ## Testing and debugging
 
-- `tests/run.lua` covers the parser, letter codes, place arming, NPC firing and abbreviations (399 checks at the time of writing).
+- `tests/run.lua` covers the parser, letter codes, place arming, NPC firing and abbreviations (452 checks at the time of writing).
 - Smoke harnesses with stubbed WoW globals have been used to run the real `/remind` handler offline. Recreate one if needed: stub `SlashCmdList`, `CreateFrame`, the `Get*ZoneText` functions and `print`, then load the addon files with `loadfile(f)("RemindMe", ns)`.
 - **In game:**
   - `/remind debug` shows parses, zone changes and NPC events.

@@ -30,7 +30,7 @@ Built for **WoW Forever** (Interface 16001).
 - **WoW abbreviations**: `org`, `sw`, `if`, `uc`, `tb`, `xr`, `stv`, `epl`, `brd`, `ubrs`, `strat`, `sm lib`, `zg`, `mc`, `bwl`, `aq40`, `naxx`, `wsg`, `ab`, `av`… and `ah`, `fp`, `fm`, `mbox`, `gbank` for NPCs. Times accept `2moro`, `tmrw`, `2nite`, `tonite` and `@5pm`. Short names count anywhere when they're 3+ letters (`buy wine in org`); 2-letter ones need capitals (`repair at IF`) or a phrase (`when I get to if`).
 - **NPC reminders**: `next time I'm at a trainer` / `weapon master`, `mailbox`, `vendor`, `bank`, `auction house`, `flight master`. They fire when that window opens.
 - **Repeating reminders**: `always at 9am`, `every day at 5pm`, `daily`, `every friday at 7pm`, `every 2h`, `every other day`, `every night`, and for places `always when I get to org` / `whenever I'm at a trainer` / `every time I'm in IF`. A repeating reminder schedules itself again when it fires; `/remind done` dismisses the current alert and `/remind delete` stops it.
-- **Priorities**: Low / Normal / High. Set them with words (`quietly`, `low priority`, `urgent`, `important`, `loudly`, `high priority`) or `!` for high. Each priority has its own alerts.
+- **Priorities**: Low / Normal / High. Set them with words (`quietly`, `low priority`, `urgent`, `important`, `loudly`, `high priority`), `!` for high, or the shorthands `-L`, `-M` (or `-N`) and `-H` anywhere in the reminder (`-low`, `-med`, `-high` also work). Each priority has its own alerts.
 - **Configurable alerts per priority**: chat message, raid-warning text, sound (built-in sounds plus any from LibSharedMedia if another addon provides it), screen edge flash, and taskbar flash when the game is in the background.
 - **On-screen reminder icon**: a round icon that sits beside the minimap mail icon by default, or can be dragged anywhere. Hover to see what's due (coloured by priority); left-click for done, right-click to snooze 10 minutes, shift-click to list everything, ctrl-click for options. Choice of icon, size, opacity, whether it shows only while something is due, and an animation per priority (pulse, glow, ring, sparkles, comet).
 - **Sound picker with preview**: each sound in the list has a play button, and long lists (LibSharedMedia) scroll.
@@ -47,7 +47,7 @@ Built for **WoW Forever** (Interface 16001).
 | `/remind done <code>` | Complete a reminder, e.g. `/remind done b` (a repeating one is just dismissed until next time) |
 | `/remind delete <code>` | Delete a reminder (stops a repeating one) |
 | `/remind snooze [code] [time]` | Snooze (default: most important due reminder, 10 minutes). Snoozing a place reminder turns it into a timed one |
-| `/remind priority <code> low\|normal\|high` | Change a reminder's priority |
+| `/remind priority <code> l\|m\|h` | Change a reminder's priority (`low` / `normal` / `high`, `med` and `-h` also work) |
 | `/remind clear` | Remove all fired reminders |
 | `/remind clock local\|server` | Which clock times use |
 | `/remind options` | Open the options panel |

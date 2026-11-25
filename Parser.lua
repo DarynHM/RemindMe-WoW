@@ -260,8 +260,38 @@ local PRIORITY_PHRASES = {
 -- last word, so "find a quiet spot" keeps its text.
 local EDGE_WORDS = { quiet = "low", silent = "low", loud = "high" }
 
+-- Shorthand flags: "-L", "-M", "-H" (and -N / long forms), any case. Also
+-- used by "/remind priority <code> <word>" via Parser.PriorityWord.
+local PRIORITY_FLAGS = {
+    l = "low", low = "low",
+    m = "normal", n = "normal", med = "normal", medium = "normal", normal = "normal",
+    h = "high", high = "high",
+}
+
+-- "h", "-H", "med"... -> "low"|"normal"|"high", or nil.
+function Parser.PriorityWord(word)
+    if type(word) ~= "string" then return nil end
+    return PRIORITY_FLAGS[word:lower():gsub("^%-", "")]
+end
+
 -- Returns "low"|"normal"|"high" or nil.
 local function extractPriority(l, isFree, claim)
+    -- Flags first: a standalone "-word" (start of text or after a space, then
+    -- the end, a space or punctuation), so "e-mail" and "low-priority" are text.
+    local init = 1
+    while true do
+        local s, word, e = l:match("()%-(%a+)()", init)
+        if not s then break end
+        local before = (s == 1) or l:sub(s - 1, s - 1):find("%s")
+        local after = l:sub(e, e)
+        local ends = (after == "") or after:find("[%s%p]") and after ~= "-"
+        if before and ends and PRIORITY_FLAGS[word] and isFree(s, e - 1) then
+            claim(s, e - 1)
+            return PRIORITY_FLAGS[word]
+        end
+        init = s + 1
+    end
+
     for _, p in ipairs(PRIORITY_PHRASES) do
         local r = findFree(l, "%f[%w]" .. p[1] .. "%f[%W]", isFree)
         if r then claim(r[1], r[2]); return p[2] end

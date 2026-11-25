@@ -122,6 +122,22 @@ expect("normal priority 1h check mail", "check mail", NOW + 3600, "normal")
 expect("silently in 30m feed pet", "feed pet", NOW + 1800, "low")
 expect("make it loud music at 5pm", "make it loud music", ts(21, 17), nil)
 
+-- Shorthand flags: -L / -M / -N / -H and long forms, any case, standalone only
+expect("-h in 10m raid", "raid", NOW + 600, "high")
+expect("buy pots tonight -L", "buy pots", ts(21, 20), "low")
+expect("raid -M at 5pm", "raid", ts(21, 17), "normal")
+expect("-n at 5pm raid", "raid", ts(21, 17), "normal")
+expect("-HIGH at 5pm raid", "raid", ts(21, 17), "high")
+expect("-medium 1h check mail", "check mail", NOW + 3600, "normal")
+expect("at 5pm raid -low.", "raid", ts(21, 17), "low")
+expect("check e-mail at 5pm", "check e-mail", ts(21, 17), nil)
+expect("raid -x at 5pm", "raid -x", ts(21, 17), nil)
+check("PriorityWord h", Parser.PriorityWord("h") == "high")
+check("PriorityWord -H", Parser.PriorityWord("-H") == "high")
+check("PriorityWord med", Parser.PriorityWord("med") == "normal")
+check("PriorityWord L", Parser.PriorityWord("L") == "low")
+check("PriorityWord foo", Parser.PriorityWord("foo") == nil)
+
 -- Errors
 expectError("buy potions")                  -- no time
 expectError("at 12pm today")                -- no message
@@ -200,6 +216,8 @@ expectPlace("next time I'm in razor hill, buy food", "buy food", "zone", "razor 
 expectPlace("next time I'm in razor hill buy food", "hill buy food", "zone", "razor", { known = false })
 expectPlace("! when I get to IF bank stuff", "bank stuff", "zone", "Ironforge", { priority = "high" })
 expectPlace("quietly when I get to sw check mail", "check mail", "zone", "Stormwind City", { priority = "low" })
+expectPlace("-low when I get to org repair", "repair", "zone", "Orgrimmar", { priority = "low" })
+expectPlace("next time I'm at a trainer learn swords -H", "learn swords", "npc", "a trainer", { priority = "high" })
 expectPlace("remind me in orgrimmar to buy wine", "buy wine", "zone", "Orgrimmar")
 expectPlace("remind me in org to buy wine", "buy wine", "zone", "Orgrimmar")
 expectPlace("buy wine when in org", "buy wine", "zone", "Orgrimmar")
