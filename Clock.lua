@@ -33,8 +33,11 @@ end
 
 -- Context handed to the pure Parser. "now" is shifted into the chosen clock;
 -- results must be shifted back with Clock.ToReal().
+-- morning / night: minutes after midnight for "tomorrow" / "morning" and
+-- "tonight" / "night" (options panel, Times).
 function Clock.ParserContext()
-    return { now = time() + Clock.Offset(), time = time, date = date }
+    local s = ns.settings or {}
+    return { now = time() + Clock.Offset(), time = time, date = date, morning = s.morning, night = s.night }
 end
 
 function Clock.ToReal(virtualTs)
@@ -46,9 +49,9 @@ local function formatTime(t)
     return s
 end
 
--- Human description of a real epoch timestamp in the current clock mode,
--- e.g. "today 12:00 PM", "tomorrow 9:00 AM", "Friday 6:30 PM", "Dec 03 9:00 AM".
-function Clock.Describe(ts)
+-- Day part of a real epoch timestamp in the current clock mode: "today",
+-- "tomorrow", "yesterday", "Friday" (within a week) or "Dec 03".
+function Clock.DescribeDay(ts)
     local off = Clock.Offset()
     local v, vnow = ts + off, time() + off
     local d, n = date("*t", v), date("*t", vnow)
@@ -59,14 +62,33 @@ function Clock.Describe(ts)
     end
     local days = math.floor((midnight(d) - midnight(n)) / 86400 + 0.5)
 
-    local dayText
-    if days == 0 then dayText = "today"
-    elseif days == 1 then dayText = "tomorrow"
-    elseif days == -1 then dayText = "yesterday"
-    elseif days > 1 and days < 7 then dayText = WEEKDAY_NAMES[d.wday]
-    else dayText = date("%b %d", v)
+    if days == 0 then return "today"
+    elseif days == 1 then return "tomorrow"
+    elseif days == -1 then return "yesterday"
+    elseif days > 1 and days < 7 then return WEEKDAY_NAMES[d.wday]
     end
+    return date("%b %d", v)
+end
 
+-- "5:00 PM" (plus " (server)" on the realm clock).
+function Clock.DescribeTime(ts)
     local suffix = (Clock.Mode() == "server") and " (server)" or ""
-    return dayText .. " " .. formatTime(v) .. suffix
+    return formatTime(ts + Clock.Offset()) .. suffix
+end
+
+-- Minutes after midnight in the current clock mode (0 = midnight).
+function Clock.MinuteOfDay(ts)
+    local t = date("*t", ts + Clock.Offset())
+    return t.hour * 60 + t.min
+end
+
+-- "Friday"
+function Clock.Weekday(ts)
+    return WEEKDAY_NAMES[date("*t", ts + Clock.Offset()).wday]
+end
+
+-- Human description of a real epoch timestamp in the current clock mode,
+-- e.g. "today 12:00 PM", "tomorrow 9:00 AM", "Friday 6:30 PM", "Dec 03 9:00 AM".
+function Clock.Describe(ts)
+    return Clock.DescribeDay(ts) .. " " .. Clock.DescribeTime(ts)
 end

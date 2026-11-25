@@ -69,3 +69,28 @@ Lines starting with "--" are notes, not commands.
 /remind clear
 /remind list
 /remind debug
+
+-- TIME + PLACE (/reload is enough)
+/remind tomorrow when I get to <a nearby zone> tp tomorrow
+/remind after 5pm when I'm in <a nearby zone> tp after
+/remind list
+-- Triggers column: "when you get to X, tomorrow" / "today after 5:00 PM"; Status "starts ..."
+-- Popup: stand in a zone, then:
+/remind in 1m when I get to <the zone you're in> tp popup
+-- After ~1 minute: popup "you're already in X" with Cancel reminder / Next arrival
+-- Press Next arrival, leave the zone and come back: it fires
+/remind in 1m when I get to <the zone you're in> tp cancel
+-- After ~1 minute press Cancel reminder: chat says "cancelled", it's gone from the list
+-- Deadline: pick a zone far away and a time 2 minutes from now
+/remind before <2 minutes from now> when I get to <a far zone> tp missed
+-- After 2 minutes: alert with "(missed: you didn't get to X in time)"
+/remind every day when I get to <a nearby zone> tp daily
+/remind next time I'm at a mailbox by tomorrow tp mail
+-- Open a mailbox: fires
+
+-- MORNING / NIGHT
+-- Esc > Options > AddOns > RemindMe > Times: set Morning to 7:30 AM, Night to 10:00 PM
+/remind tomorrow morning tp morning
+/remind tonight tp night
+-- Confirmations say tomorrow 7:30 AM and today 10:00 PM
+/run print("StaticPopup", StaticPopup_Show and "yes" or "no")

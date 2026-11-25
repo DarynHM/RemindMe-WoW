@@ -230,7 +230,6 @@ do
     check("typo suggestion", r == nil and err:find("in Orgrimmar", 1, true) ~= nil, tostring(err))
 end
 expectPlaceError("remind me in orgrimmar")                     -- nothing to remind about
-expectPlaceError("when I get to Orgrimmar at 5pm buy wine")   -- time + place: not yet
 expectPlaceError("meet at if")                                 -- bare aliases don't count
 
 do  -- "if" is not read as Ironforge in a time reminder
@@ -334,7 +333,6 @@ do
     expectPlace("everytime im in xroads say hi", "say hi", "zone", "The Crossroads", { every = true })
     expectPlace("when I get to org repair", "repair", "zone", "Orgrimmar", { every = nil })
     expectPlaceError("me always stretch")                       -- always when?
-    expectPlaceError("every day when I get to org repair")      -- places only repeat per arrival
 end
 
 -- Repeating in the scheduler
@@ -512,6 +510,216 @@ do
     check("StatusText fired", S.StatusText(highFired) == "fired T30", S.StatusText(highFired))
     check("StatusText snoozed", S.StatusText(snoozed) == "snoozed until T400", S.StatusText(snoozed))
     check("highLater untouched", not highLater.fired)
+end
+
+-- Day parts and the morning / night settings (time reminders)
+expect("friday night at 9 raid", "raid", ts(27, 21))
+expect("tomorrow morning at 8 run", "run", ts(22, 8))
+expect("tomorrow morning stretch", "stretch", ts(22, 9))
+expect("friday night raid", "raid", ts(27, 20))
+expect("friday evening raid", "raid", ts(27, 20))
+expect("this evening raid", "raid", ts(21, 20))
+expect("in the morning stretch", "stretch", ts(22, 9))     -- 9am passed: tomorrow
+expect("tomorrow night at 11 log off", "log off", ts(22, 23))
+expectError("this morning stretch")                         -- already passed
+do
+    local function custom(input, message, at)
+        local c = ctx(); c.morning = 7 * 60; c.night = 21 * 60 + 30
+        local r, err = Parser.Parse(input, c)
+        check(input .. " [custom times]", r and r.message == message and r.trigger.at == at,
+            r and ("got %q @ %s"):format(r.message, fmt(r.trigger.at)) or err)
+    end
+    custom("tomorrow stretch", "stretch", ts(22, 7))
+    custom("tonight raid", "raid", ts(21, 21, 30))
+    custom("every night feed pet", "feed pet", ts(21, 21, 30))
+    custom("friday morning bank", "bank", ts(27, 7))
+end
+
+-- Window words without a place just set the time; other uses stay text
+expect("call mom after 5pm", "call mom", ts(21, 17))
+expect("pay rent by friday", "pay rent", ts(27, 9))
+expect("drop by the bank at 5pm", "drop by the bank", ts(21, 17))
+expect("buy from vendor tomorrow", "buy from vendor", ts(22, 9))
+expect("raid starting at 7pm", "raid", ts(21, 19))
+
+-- Time + place: a place reminder with a window (after / before)
+do
+    local function win(input, message, name, after, before, extra)
+        local c = ctx(); c.places = PLACES
+        local r, err = Parser.Parse(input, c)
+        if not r then check(input, false, "error: " .. tostring(err)); return end
+        local t = r.trigger
+        check(input .. " [message]", r.message == message, ("got %q, want %q"):format(r.message, message))
+        check(input .. " [place]", t.type == "place" and t.name == name, tostring(t.name))
+        check(input .. " [after]", t.after == after, ("got %s, want %s"):format(fmt(t.after), fmt(after)))
+        check(input .. " [before]", t.before == before, ("got %s, want %s"):format(fmt(t.before), fmt(before)))
+        for k, v in pairs(extra or {}) do
+            local got = t[k]
+            if type(got) == "table" then got = got.unit .. " " .. got.n end
+            check(input .. " [" .. k .. "]", got == v, ("got %s, want %s"):format(tostring(got), tostring(v)))
+        end
+    end
+    win("tomorrow when I get to org buy reagents", "buy reagents", "Orgrimmar", ts(22, 0), ts(23, 0), { every = nil })
+    win("when I get to org tomorrow buy reagents", "buy reagents", "Orgrimmar", ts(22, 0), ts(23, 0))
+    win("tomorrow morning when I get to IF buy reagents", "buy reagents", "Ironforge", ts(22, 9), ts(23, 0))
+    win("tonight when I get to sw check mail", "check mail", "Stormwind City", ts(21, 20), ts(22, 0))
+    win("after 5pm when I'm in org buy wine", "buy wine", "Orgrimmar", ts(21, 17), ts(22, 0))
+    win("when I get to Orgrimmar at 5pm buy wine", "buy wine", "Orgrimmar", ts(21, 17), ts(22, 0))
+    win("in 2h when I get to org repair", "repair", "Orgrimmar", NOW + 7200, nil)
+    win("before 8pm when I get to org repair", "repair", "Orgrimmar", nil, ts(21, 20))
+    win("friday before 8pm next time I'm at the bank deposit mats", "deposit mats", "the bank", ts(27, 0), ts(27, 20))
+    win("by friday when I get to org repair", "repair", "Orgrimmar", nil, ts(28, 0))
+    win("by tonight when I get to org repair", "repair", "Orgrimmar", nil, ts(21, 20))
+    win("every day when I get to org repair", "repair", "Orgrimmar", ts(21, 0), ts(22, 0), { every = "day 1" })
+    win("every friday next time I'm at the ah sell herbs", "sell herbs", "the auction house", ts(27, 0), ts(28, 0),
+        { every = "day 7" })
+    win("every night when I get to org feed pet", "feed pet", "Orgrimmar", ts(21, 20), ts(22, 0), { every = "day 1" })
+    win("every 2h when in org drink", "drink", "Orgrimmar", nil, nil, { every = "sec 7200" })
+    win("whenever I'm in org after 5pm buy wine", "buy wine", "Orgrimmar", ts(21, 17), ts(22, 0),
+        { every = "day 1", each = true })
+    win("whenever I get to org repair", "repair", "Orgrimmar", nil, nil, { every = true })
+    expectPlaceError("before 9am when I get to org repair")   -- deadline already passed
+    local c = ctx(); c.places = PLACES
+    local r = Parser.Parse("at 5pm at Orgrimmar buy wine", c)
+    check("bare place + time doesn't combine", r and r.trigger.type == "time" and r.trigger.at == ts(21, 17),
+        r and r.message)
+end
+
+-- Place windows in the scheduler
+do
+    local now = NOW
+    local fired, asked, here = {}, {}, {}
+    local sns = {
+        charDB = { reminders = {}, nextId = 1 },
+        Clock = {
+            Now = function() return now end,
+            Describe = function(t) return "T" .. (t - NOW) end,
+            DescribeDay = function(t) return "D" .. os.date("%d", t) end,
+            DescribeTime = function(t) return os.date("%H:%M", t) end,
+            MinuteOfDay = function(t) local d = os.date("*t", t); return d.hour * 60 + d.min end,
+            Weekday = function(t) return os.date("%A", t) end,
+        },
+        Notify = {
+            Fire = function(r, note) fired[#fired + 1] = { r = r, note = note } end,
+            AskAlreadyHere = function(r) asked[#asked + 1] = r end,
+        },
+        Places = { IsHere = function(key) return here[key] == true end },
+    }
+    assert(loadfile("Scheduler.lua"))("RemindMe", sns)
+    local S = sns.Scheduler
+    local ORG, AWAY = { orgrimmar = true }, { durotar = true }
+    local function zone(text, extra)
+        local t = { type = "place", kind = "zone", key = "orgrimmar", name = "Orgrimmar", armed = true }
+        for k, v in pairs(extra or {}) do t[k] = v end
+        return S.Add(text, t)
+    end
+
+    -- "tomorrow when I get to org": nothing before the window, fires inside it
+    local tmrw = zone("tomorrow", { after = ts(22, 0), before = ts(23, 0) })
+    S.CheckPlaces(ORG)
+    check("window: no fire before it opens", not tmrw.fired)
+    S.CheckPlaces(AWAY)
+    now = ts(22, 1); S.Check()
+    check("window opens elsewhere: no popup", tmrw.trigger.opened and #asked == 0)
+    S.CheckPlaces(ORG)
+    check("window: fires on arrival inside it", tmrw.fired)
+
+    -- Deadline passes: missed alert, stays fired
+    now = NOW
+    local dl = zone("deadline", { before = ts(21, 20) })
+    now = ts(21, 20); S.Check()
+    check("deadline: missed alert", dl.fired and fired[#fired].r == dl
+        and fired[#fired].note:find("missed", 1, true) ~= nil, fired[#fired] and fired[#fired].note)
+    local n = #fired
+    now = ts(21, 21); S.Check()
+    check("deadline: alerts once", #fired == n)
+
+    -- Periodic: once a day, moves on when it fires and when it closes
+    now = NOW
+    local daily = zone("daily", { after = ts(21, 0), before = ts(22, 0), opened = true, every = { unit = "day", n = 1 } })
+    S.CheckPlaces(ORG)
+    check("daily: fires in today's window", daily.fired)
+    check("daily: window moves to tomorrow", daily.trigger.after == ts(22, 0) and daily.trigger.before == ts(23, 0),
+        fmt(daily.trigger.after))
+    check("daily: disarmed", daily.trigger.armed == false)
+
+    -- Already there when it opens: popup, then skip
+    here.orgrimmar = true
+    now = ts(22, 0) + 5; S.Check()
+    check("already here: asked", asked[#asked] == daily and daily.trigger.armed == false)
+    check("skip moves the window", S.CancelAlreadyHere(daily) == "skipped" and daily.trigger.after == ts(23, 0))
+
+    -- Window closes without a visit: moves on silently
+    here.orgrimmar = false
+    n = #fired
+    now = ts(24, 0) + 1; S.Check()
+    check("daily: closed window moves on", daily.trigger.after == ts(24, 0) and daily.trigger.before == ts(25, 0),
+        fmt(daily.trigger.after) .. " / " .. fmt(daily.trigger.before))
+    check("daily: no alert for a missed window", #fired == n)
+
+    -- One-off already here: cancel deletes it
+    now = NOW
+    here.orgrimmar = true
+    local oneoff = zone("oneoff", { after = ts(21, 11), before = ts(22, 0), armed = false })
+    now = ts(21, 11); S.Check()
+    check("one-off already here: asked", asked[#asked] == oneoff)
+    check("cancel removes a one-off", S.CancelAlreadyHere(oneoff) == "removed" and S.ByCode(oneoff.code) == nil)
+    here.orgrimmar = false
+
+    -- NPC window and cooldown
+    now = NOW
+    local npc = S.Add("bank", { type = "place", kind = "npc", npc = "bank", name = "the bank", after = ts(22, 0) })
+    S.CheckNpc("bank")
+    check("npc: closed window ignored", not npc.fired)
+    now = ts(22, 1); S.CheckNpc("bank")
+    check("npc: fires in window", npc.fired)
+    local cd = S.Add("drink", { type = "place", kind = "npc", npc = "vendor", name = "a vendor",
+        every = { unit = "sec", n = 3600 } })
+    S.CheckNpc("vendor")
+    n = #fired
+    S.CheckNpc("vendor")
+    check("cooldown: not again within the hour", cd.fired and #fired == n)
+    now = now + 3601; S.CheckNpc("vendor")
+    check("cooldown: again after it", #fired == n + 1)
+
+    -- Each arrival inside a periodic window ("whenever I'm in org after 5pm")
+    now = ts(21, 18)
+    local each = zone("each", { after = ts(21, 17), before = ts(22, 0), opened = true, each = true,
+        every = { unit = "day", n = 1 } })
+    S.CheckPlaces(ORG)
+    S.CheckPlaces(AWAY); S.CheckPlaces(ORG)
+    check("each: fires every arrival in the window", each.fired and each.trigger.after == ts(21, 17))
+
+    -- Text
+    now = NOW
+    local function tt(trig) return S.TriggerText({ trigger = trig }) end
+    local function z(extra)
+        local t = { type = "place", kind = "zone", key = "orgrimmar", name = "Orgrimmar", armed = true }
+        for k, v in pairs(extra) do t[k] = v end
+        return t
+    end
+    check("text: whole day", tt(z({ after = ts(22, 0), before = ts(23, 0) })) == "when you get to Orgrimmar, D22",
+        tt(z({ after = ts(22, 0), before = ts(23, 0) })))
+    check("text: after", tt(z({ after = ts(21, 17), before = ts(22, 0) })) == "when you get to Orgrimmar, D21 after 17:00",
+        tt(z({ after = ts(21, 17), before = ts(22, 0) })))
+    check("text: before", tt(z({ before = ts(21, 20) })) == "when you get to Orgrimmar, before 20:00 D21",
+        tt(z({ before = ts(21, 20) })))
+    check("text: by end of day", tt(z({ before = ts(28, 0) })) == "when you get to Orgrimmar, by the end of D27",
+        tt(z({ before = ts(28, 0) })))
+    check("text: day before time", tt(z({ after = ts(27, 0), before = ts(27, 20) })) == "when you get to Orgrimmar, D27 before 20:00",
+        tt(z({ after = ts(27, 0), before = ts(27, 20) })))
+    check("text: from", tt(z({ after = NOW + 7200 })) == "when you get to Orgrimmar, from T7200",
+        tt(z({ after = NOW + 7200 })))
+    check("text: once a day", tt(z({ after = ts(21, 0), before = ts(22, 0), every = { unit = "day", n = 1 } }))
+        == "when you get to Orgrimmar, once a day")
+    check("text: weekly", tt(z({ after = ts(27, 0), before = ts(28, 0), every = { unit = "day", n = 7 } }))
+        == "when you get to Orgrimmar, every Friday")
+    check("text: each after", tt(z({ after = ts(21, 17), before = ts(22, 0), each = true, every = { unit = "day", n = 1 } }))
+        == "every time you get to Orgrimmar, each day, after 17:00",
+        tt(z({ after = ts(21, 17), before = ts(22, 0), each = true, every = { unit = "day", n = 1 } })))
+    check("text: cooldown", tt(z({ every = { unit = "sec", n = 3600 } })) == "when you get to Orgrimmar, at most every 1h")
+    check("status: starts", S.StatusText({ trigger = z({ after = ts(22, 0), before = ts(23, 0) }) }) == "starts T50400",
+        S.StatusText({ trigger = z({ after = ts(22, 0), before = ts(23, 0) }) }))
 end
 
 -- Release packaging: RemindMe.toc (fallback) and RemindMe_Forever.toc (WowUp Hub's

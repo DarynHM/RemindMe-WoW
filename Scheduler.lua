@@ -8,6 +8,11 @@
 --             | { type = "place", kind = "zone", key, name, known, armed }
 --             | { type = "place", kind = "npc", npc, name },
 --     trigger.every = { unit = "day"|"sec", n } (time) or true (place): repeating.
+--     Place window (optional): trigger.after / trigger.before (epoch). A place
+--     reminder only fires inside it; `opened` marks that the window's opening
+--     has been handled. A place `every` can also be { unit = "day", n } (once
+--     per window, moving on n days; `each` = every arrival inside it) or
+--     { unit = "sec", n } (at most every n seconds).
 --     snoozedUntil = epoch|nil, fired = bool, firedAt = epoch|nil }
 -- A fired reminder stays in the list (marked "fired") until it is completed,
 -- deleted or snoozed, the same way Slack keeps it until you act on it.
@@ -120,10 +125,11 @@ end
 function Scheduler.PlaceText(r)
     local t = r.trigger
     if not t or t.type ~= "place" then return nil end
+    local every = t.every == true or t.each
     if t.kind == "npc" then
-        return (t.every and "every time you're at " or "at ") .. t.name
+        return (every and "every time you're at " or "at ") .. t.name
     end
-    return (t.every and "every time you get to " or "when you get to ") .. t.name
+    return (every and "every time you get to " or "when you get to ") .. t.name
 end
 
 -- 5400 -> "1h30m"
@@ -149,11 +155,57 @@ function Scheduler.EveryText(r)
     return "every " .. e.n .. " days"
 end
 
+local HOUR = 3600
+
+-- A place reminder's window: "tomorrow", "today after 5:00 PM",
+-- "before 8:00 PM today", "by the end of Friday", "once a day", "every Friday".
+-- nil when it has none.
+function Scheduler.WindowText(t)
+    local C = ns.Clock
+    local a, b, e = t.after, t.before, t.every
+    local function isMidnight(ts) return C.MinuteOfDay(ts) == 0 end
+    local wholeDay = a and b and isMidnight(a) and isMidnight(b) and b - a >= 23 * HOUR and b - a <= 25 * HOUR
+    local dayEnds = a and b and isMidnight(b) and b - a <= 25 * HOUR
+
+    if type(e) == "table" and e.unit == "sec" then
+        return "at most every " .. shortDuration(e.n)
+    end
+    if type(e) == "table" then
+        local period
+        if e.n == 1 then period = t.each and "each day" or "once a day"
+        elseif e.n == 7 then period = "every " .. C.Weekday(a or b)
+        else period = "every " .. e.n .. " days" end
+        if wholeDay or not (a or b) then return period end
+        if dayEnds then return period .. ", after " .. C.DescribeTime(a) end
+        if a and not isMidnight(a) then period = period .. ", after " .. C.DescribeTime(a) end
+        if b then period = period .. ", before " .. C.DescribeTime(b) end
+        return period
+    end
+
+    if wholeDay then return C.DescribeDay(a) end
+    if dayEnds then return C.DescribeDay(a) .. " after " .. C.DescribeTime(a) end
+    if b then
+        local by = isMidnight(b) and ("by the end of " .. C.DescribeDay(b - 1))
+            or ("before " .. C.DescribeTime(b) .. " " .. C.DescribeDay(b))
+        if a and isMidnight(a) and b - a < 24 * HOUR then
+            return C.DescribeDay(a) .. " before " .. C.DescribeTime(b)   -- "Friday before 8:00 PM"
+        elseif a and a > C.Now() then
+            return "from " .. C.Describe(a) .. ", " .. by
+        end
+        return by
+    end
+    if a then return "from " .. C.Describe(a) end
+    return nil
+end
+
 -- Where / when it triggers (chat list, window "Triggers" column):
--- "today 5:00 PM, every day", "when you get to Orgrimmar (after you leave)".
+-- "today 5:00 PM, every day", "when you get to Orgrimmar (after you leave)",
+-- "when you get to Ironforge, tomorrow".
 function Scheduler.TriggerText(r)
     local where = Scheduler.PlaceText(r)
     if where then
+        local window = Scheduler.WindowText(r.trigger)
+        if window then where = where .. ", " .. window end
         if r.trigger.armed == false then where = where .. " (after you leave)" end
         return where
     end
@@ -169,6 +221,10 @@ function Scheduler.StatusText(r)
         return "fired" .. (at and (" " .. ns.Clock.Describe(at)) or "")
     elseif r.snoozedUntil then
         return "snoozed until " .. ns.Clock.Describe(r.snoozedUntil)
+    end
+    local t = r.trigger
+    if t and t.type == "place" and t.after and t.after > ns.Clock.Now() then
+        return "starts " .. ns.Clock.Describe(t.after)
     end
     return "waiting"
 end
@@ -288,25 +344,100 @@ function Scheduler.Snooze(r, seconds)
     changed()
 end
 
+local function addDays(ts, n)
+    local tt = date("*t", ts)
+    tt.day = tt.day + n
+    tt.isdst = nil   -- keep the wall-clock time across DST changes
+    return time(tt)
+end
+
+-- Is a place reminder's window (after / before) open at `now`?
+local function windowOpen(t, now)
+    return (not t.after or now >= t.after) and (not t.before or now < t.before)
+end
+Scheduler.WindowOpen = windowOpen
+
+-- Periodic place window ({ unit = "day", n }): move it on by n days at a time
+-- until it hasn't closed yet.
+local function advanceWindow(t, now)
+    local e = t.every
+    if type(e) ~= "table" or e.unit ~= "day" or not (t.after or t.before) then return end
+    for _ = 1, 5000 do
+        if t.after then t.after = addDays(t.after, e.n) end
+        if t.before then t.before = addDays(t.before, e.n) end
+        if (t.before or t.after) > now then break end
+    end
+    t.opened = nil
+end
+
 local function fire(r, note)
     r.fired = true
     r.firedAt = ns.Clock.Now()
     ns.Notify.Fire(r, note)
     local t = r.trigger
+    if t.type == "place" then t.opened = true end
     if t.every then
         r.snoozedUntil = nil
         if t.type == "time" then
             t.at = Scheduler.NextAt(t, r.firedAt)
-        elseif t.kind == "zone" then
-            t.armed = false   -- you're there now: next time is after you leave
+        else
+            if type(t.every) == "table" then
+                if t.every.unit == "sec" then
+                    t.after = r.firedAt + t.every.n      -- at most every n seconds
+                elseif not t.each then
+                    advanceWindow(t, r.firedAt)          -- once per window
+                end
+            end
+            if t.kind == "zone" then
+                t.armed = false   -- you're there now: next time is after you leave
+            end
         end
     end
+end
+
+-- "Cancel" on the already-here popup: a periodic reminder skips this window,
+-- anything else is deleted. Returns "skipped" or "removed".
+function Scheduler.CancelAlreadyHere(r)
+    local t = r.trigger
+    if type(t.every) == "table" and t.every.unit == "day" then
+        advanceWindow(t, ns.Clock.Now())
+        changed()
+        return "skipped"
+    end
+    Scheduler.Remove(r)
+    return "removed"
 end
 
 -- Can this reminder fire now? One-offs fire once; repeating ones fire again
 -- even if the last alert wasn't dismissed.
 local function canFire(r)
     return not r.fired or (r.trigger and r.trigger.every)
+end
+
+-- Place windows opening and closing (called from the ticker). Returns true
+-- if anything changed.
+local function checkWindow(r, now)
+    local t = r.trigger
+    if t.before and now >= t.before then
+        if type(t.every) == "table" then
+            advanceWindow(t, now)             -- periodic: on to the next one, no alert
+            return true
+        elseif not r.fired then
+            fire(r, "(missed: you didn't get to " .. t.name .. " in time)")
+            return true
+        end
+        return false
+    end
+    if t.after and not t.opened and now >= t.after then
+        t.opened = true
+        -- Already standing there when it opens: ask (next arrival / cancel).
+        if t.kind == "zone" and canFire(r) and ns.Places and ns.Places.IsHere(t.key) then
+            t.armed = false
+            if ns.Notify.AskAlreadyHere then ns.Notify.AskAlreadyHere(r) end
+        end
+        return true
+    end
+    return false
 end
 
 -- Timed reminders, and place reminders that were snoozed (snoozing is always
@@ -324,6 +455,10 @@ function Scheduler.Check()
             fire(r, note)
             anyFired = true
         end
+        local t = r.trigger
+        if t and t.type == "place" and not r.snoozedUntil and checkWindow(r, now) then
+            anyFired = true
+        end
     end
     if anyFired then changed() end
 end
@@ -332,11 +467,12 @@ end
 -- you're already there is unarmed, and arms once you've left.
 function Scheduler.CheckPlaces(set)
     local any = false
+    local now = ns.Clock.Now()
     for _, r in ipairs(Scheduler.Sorted()) do
         local t = r.trigger
         if canFire(r) and not r.snoozedUntil and t.type == "place" and t.kind == "zone" then
             if set[t.key] then
-                if t.armed then
+                if t.armed and windowOpen(t, now) then
                     fire(r, "(you've arrived in " .. t.name .. ")")
                     any = true
                 end
@@ -352,9 +488,11 @@ end
 -- An NPC window of `kind` ("trainer", "mailbox", ...) just opened.
 function Scheduler.CheckNpc(kind)
     local any = false
+    local now = ns.Clock.Now()
     for _, r in ipairs(Scheduler.Sorted()) do
         local t = r.trigger
-        if canFire(r) and not r.snoozedUntil and t.type == "place" and t.kind == "npc" and t.npc == kind then
+        if canFire(r) and not r.snoozedUntil and t.type == "place" and t.kind == "npc" and t.npc == kind
+            and windowOpen(t, now) then
             fire(r)
             any = true
         end

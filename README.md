@@ -7,6 +7,7 @@
 /remind at 7pm tomorrow raid
 /remind when I get to Orgrimmar, get my weapon skill
 /remind next time I'm at a mailbox, send mats to my alt
+/remind tomorrow when I get to Ironforge, buy reagents
 /remind every day at 9am do the daily quests
 ```
 
@@ -23,10 +24,11 @@ Slack's `/remind` works so well that I wanted the same thing in game. Type it on
 
 ## What it can do
 
-- **Times:** `in 20 minutes`, `1h30m`, `at 5pm`, `noon`, `tomorrow`, `friday at 9am`, `tmrw`, `@5pm`.
+- **Times:** `in 20 minutes`, `1h30m`, `at 5pm`, `noon`, `tomorrow`, `tomorrow morning`, `friday night`, `tmrw`, `@5pm`. You can choose what time "morning" and "night" mean in the options.
 - **Places:** `when I get to Ironforge`, `next time I'm in org`, `at IF`. It fires when you arrive. It knows the usual short names too: `sw`, `uc` and so on.
 - **NPCs:** next time you open a trainer, mailbox, vendor, bank, guild bank, auction house or flight master.
-- **Repeating:** `every day at 5pm`, `daily`, `every 2h`, `always`, `whenever I get to org`.
+- **Time and place together:** `tomorrow when I get to IF`, `after 5pm when I'm in org`, `before 8pm next time I'm at the bank`. If the day ends and you never got there, it tells you that you missed it. If you're already there when the time comes, it asks whether to wait for your next arrival.
+- **Repeating:** `every day at 5pm`, `daily`, `every 2h`, `always`, `whenever I get to org`, `every day when I get to org` (once a day).
 - **Priority:** add `-L`, `-M` or `-H` (or say `quietly` / `urgent`, or start with `!`). Each priority gets its own alerts, which you set up in the options.
 - **Reminder list:** Shift-click the icon or type `/remind list` to see everything. You can mark reminders done, delete them or change their priority there.
 - **Missed reminders:** anything that came due while you were offline pops up when you log in.
@@ -47,10 +49,6 @@ Each reminder gets a letter code (`a`, `b`, `c`…) that stays the same until yo
 | `/remind options` | Open the options |
 
 There are also `/remind clock local|server`, `/remind where` (the place names it sees where you're standing) and `/remind debug`.
-
-## Coming next
-
-- Time and place together: "tomorrow when I get to Ironforge".
 
 Got an idea or found a bug? [Open an issue](https://github.com/DarynHM/RemindMe-WoW/issues).
 

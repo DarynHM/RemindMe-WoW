@@ -61,7 +61,8 @@ Saved variables: `RemindMeDB` (account settings) and `RemindMeCharDB` (per-chara
 **Time parsing**
 - Shorthand: `10m`, `1h30m`, `2d`, `1w`. Clock times: `12pm`, `17:30`, noon, midnight. Days: today, tonight, tomorrow, weekdays.
 - Abbreviations: tmrw / 2moro / 2nite / tonite, and `@5pm`.
-- A day with no time means 9am; tonight means 8pm. A time already passed today is an error.
+- A day with no time means the morning time; tonight means the night time. Both are options (`RemindMeDB.morning` / `night`, minutes, default 540 = 9am / 1200 = 8pm, a dropdown every 30 min) passed to the parser as `ctx.morning` / `ctx.night`. A time already passed today is an error.
+- Day parts: `tomorrow morning`, `friday night` / `evening`, `this morning`, `this evening`, `in the morning` (tomorrow once this morning has passed). A part also settles an ambiguous clock ("friday night at 9" = 9pm).
 
 **Place triggers**
 - Phrases: `when I get to X`, `next time I'm in X`, `when in X`, `once I'm at X`, and so on.
@@ -79,13 +80,17 @@ Saved variables: `RemindMeDB` (account settings) and `RemindMeCharDB` (per-chara
   - Day steps add calendar days, so 9am stays 9am across DST.
   - Whole-day durations (`every 2d`) become day steps. With no clock time, day steps use the 9am default and roll to tomorrow if 9am has passed.
 - `always` with a time and no day means daily; `always` with a weekday means weekly; `always in 2h` means every 2h.
-- `every day when I get to org` is an error: places repeat per arrival.
+- `every day when I get to org` fires once a day, on the first arrival (a daily window; see time + place below).
 - **On fire:** it notifies, shows as fired, then re-arms immediately. A time reminder moves `at` to its next occurrence; a zone reminder sets `armed = false` until you leave. It fires again even if the previous alert wasn't dismissed.
 - **Commands:** `done` (`Scheduler.Complete`) dismisses and keeps it; `delete` removes it; `clear` dismisses repeating ones and removes fired one-offs. Snoozing works once, then it goes back to its schedule.
 
 **Other rules**
 - **Snooze is always time-based**, including for place reminders.
-- **Time + place together is not supported yet** and gives an error. It's on the roadmap.
+- **Time + place together** is a place reminder with a window (`trigger.after` / `trigger.before`): "tomorrow when I get to IF", "after 5pm when I'm in org", "before 8pm next time I'm at the bank". Full rules: `docs/time-and-place.md`.
+  - Only phrase places combine with a time; bare places (`at IF`) still need no time.
+  - Window words: `after` / `from` / `starting` and `before` / `by` / `until`, claimed only straight before a time or day. Without a place they just set the time.
+  - A day lasts only that day. A one-off whose window closes unfired alerts as missed; a periodic one (`every day when I get to org`, `every = { unit = "day", n }`) moves on silently. `every 2h when in org` is a cooldown (`{ unit = "sec", n }`); "whenever" plus a time sets `each` (every arrival inside the window).
+  - Already in the zone when the window opens: popup (`StaticPopupDialogs.REMINDME_ALREADY_HERE`) with Cancel reminder (Skip this time for periodic) / Next arrival; Escape keeps it.
 - **A fired reminder stays in the list** (Slack-style) until it's done, deleted or snoozed. Reminders that came due while offline fire on login, marked "missed".
 
 ## Gotchas learned the hard way
@@ -98,7 +103,7 @@ Saved variables: `RemindMeDB` (account settings) and `RemindMeCharDB` (per-chara
 
 ## Testing and debugging
 
-- `tests/run.lua` covers the parser, letter codes, place arming, NPC firing and abbreviations (462 checks at the time of writing).
+- `tests/run.lua` covers the parser, letter codes, place arming, NPC firing and abbreviations (611 checks at the time of writing).
 - Smoke harnesses with stubbed WoW globals have been used to run the real `/remind` handler offline. Recreate one if needed: stub `SlashCmdList`, `CreateFrame`, the `Get*ZoneText` functions and `print`, then load the addon files with `loadfile(f)("RemindMe", ns)`.
 - **In game:**
   - `/remind debug` shows parses, zone changes and NPC events.
@@ -122,6 +127,6 @@ Saved variables: `RemindMeDB` (account settings) and `RemindMeCharDB` (per-chara
 
 ## Roadmap / not started
 
-- Time + place together ("tomorrow when I get to IF"). Design notes and open decisions: `docs/time-and-place.md`.
+- (Done) Time + place together: see `docs/time-and-place.md`.
 - (Done) Reminder list window: `ListWindow.lua`. `ns.OnRemindersChanged` (Core.lua) refreshes both the icon and the window.
 - In-game verification of: the options panel, indicator, priorities and flashes, server clock, missed reminders, place triggers, C_Map availability.

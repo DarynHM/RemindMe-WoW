@@ -14,7 +14,16 @@
 --            | { type = "place", kind = "zone", key, name, known = bool }
 --            | { type = "place", kind = "npc", npc = "trainer"|"mailbox"|..., name }
 --   trigger.every : repeating. Time: { unit = "day"|"sec", n = N } (every N days
---                   / seconds from `at`). Place: true (every arrival / window).
+--                   / seconds from `at`). Place: true (every arrival), or
+--                   { unit = "day", n } (once per window, the window moving on
+--                   by n days) or { unit = "sec", n } (at most every n seconds).
+--   place window : trigger.after / trigger.before (epoch, either optional):
+--                   a place reminder only fires inside it ("tomorrow when I
+--                   get to IF", "before 8pm next time I'm at the bank").
+--                   trigger.each = true: a periodic place that fires on every
+--                   arrival inside its window ("whenever I'm in org after 5pm").
+--   ctx.morning / ctx.night : minutes after midnight used for "tomorrow",
+--                   "morning" (default 540 = 9am) and "tonight" (1200 = 8pm).
 
 local _, ns = ...
 ns = ns or {}
@@ -23,6 +32,8 @@ local Parser = {}
 ns.Parser = Parser
 
 local unpack = unpack or table.unpack
+local date = date or (os and os.date)   -- WoW globals, or plain Lua outside the game
+local time = time or (os and os.time)
 
 local WEEKDAYS_FULL = {
     sunday = 1, monday = 2, tuesday = 3, wednesday = 4,
@@ -42,8 +53,8 @@ local UNITS = {
     w = 604800, wk = 604800, wks = 604800, week = 604800, weeks = 604800,
 }
 
-local DEFAULT_DAY_HOUR = 9     -- "tomorrow" with no time -> 9am (Slack does the same)
-local DEFAULT_TONIGHT_HOUR = 20
+local DEFAULT_MORNING = 9 * 60   -- "tomorrow" with no time -> 9am (Slack does the same)
+local DEFAULT_NIGHT = 20 * 60    -- "tonight" -> 8pm
 
 ---------------------------------------------------------------------------
 -- Durations: "10m", "1 hour 30 minutes", "an hour", "half an hour"
@@ -117,6 +128,31 @@ local function extendPrefix(l, s, words)
     return s
 end
 
+-- Like extendPrefix, but each entry is { pattern, mode } and the mode of the
+-- matched word is returned too: "after 5pm" -> "after", "by friday" -> "by".
+local function prefixed(l, s, entries)
+    local before = l:sub(1, s - 1)
+    for _, w in ipairs(entries) do
+        local p = before:find("%f[%w]" .. w[1] .. "%s+$")
+        if p then return p, w[2] end
+    end
+    return s, nil
+end
+
+-- Window words: "after"/"from"/"starting" open a place reminder's window,
+-- "before"/"by"/"until" close it. Without a place they just set the time.
+local CLOCK_PREFIX = {
+    { "starting%s+at", "after" }, { "starting%s+from", "after" }, { "starting", "after" },
+    { "after", "after" }, { "from", "after" },
+    { "before", "before" }, { "until", "by" }, { "till", "by" }, { "by", "by" },
+    { "at" }, { "around" },
+}
+local DAY_PREFIX = {
+    { "starting%s+on", "after" }, { "starting%s+from", "after" }, { "starting", "after" },
+    { "from", "after" },
+    { "before", "before" }, { "until", "by" }, { "till", "by" }, { "by", "by" },
+}
+
 ---------------------------------------------------------------------------
 -- Extraction
 ---------------------------------------------------------------------------
@@ -185,11 +221,14 @@ local function extractRelative(l, isFree, claim)
     return nil
 end
 
--- Returns { candidates = { {h, m}, ... }, ambiguous = bool } or nil.
+-- Returns { candidates = { {h, m}, ... }, ambiguous = bool,
+-- mode = "after"|"before"|"by"|nil } or nil.
 local function extractClock(l, isFree, claim)
-    local PREFIX = { "at", "by", "around" }
+    local mode
     local function take(r)
-        claim(extendPrefix(l, r[1], PREFIX), r[2])
+        local s
+        s, mode = prefixed(l, r[1], CLOCK_PREFIX)
+        claim(s, r[2])
     end
     local function h12(h, mer)
         h = tonumber(h)
@@ -203,7 +242,7 @@ local function extractClock(l, isFree, claim)
         function(_, _, h, m) return h12(h, "a") and tonumber(m) < 60 end)
     if r then
         take(r)
-        return { candidates = { { h12(r[3], r[5]), tonumber(r[4]) } } }
+        return { candidates = { { h12(r[3], r[5]), tonumber(r[4]) } }, mode = mode }
     end
 
     -- 12pm / 3 am
@@ -211,7 +250,7 @@ local function extractClock(l, isFree, claim)
         function(_, _, h) return h12(h, "a") ~= nil end)
     if r then
         take(r)
-        return { candidates = { { h12(r[3], r[4]), 0 } } }
+        return { candidates = { { h12(r[3], r[4]), 0 } }, mode = mode }
     end
 
     -- 14:00 / 9:30 (9:30 is ambiguous: am or pm)
@@ -221,16 +260,16 @@ local function extractClock(l, isFree, claim)
         take(r)
         local h, m = tonumber(r[3]), tonumber(r[4])
         if h >= 1 and h <= 12 and r[3]:sub(1, 1) ~= "0" then
-            return { candidates = { { h % 12, m }, { h % 12 + 12, m } }, ambiguous = true }
+            return { candidates = { { h % 12, m }, { h % 12 + 12, m } }, ambiguous = true, mode = mode }
         end
-        return { candidates = { { h, m } } }
+        return { candidates = { { h, m } }, mode = mode }
     end
 
     r = findFree(l, "%f[%w]noon%f[%W]", isFree)
-    if r then take(r); return { candidates = { { 12, 0 } } } end
+    if r then take(r); return { candidates = { { 12, 0 } }, mode = mode } end
 
     r = findFree(l, "%f[%w]midnight%f[%W]", isFree)
-    if r then take(r); return { candidates = { { 0, 0 } } } end
+    if r then take(r); return { candidates = { { 0, 0 } }, mode = mode } end
 
     -- Bare hour needs a preposition so "buy 20 potions" isn't a time: "at 5"
     r = findFree(l, "%f[%w]at%s+(%d%d?)%f[%W]", isFree,
@@ -239,9 +278,11 @@ local function extractClock(l, isFree, claim)
             return h >= 1 and h <= 12 and l:sub(e + 1, e + 1) ~= ":"
         end)
     if r then
-        claim(r[1], r[2])
+        local s
+        s, mode = prefixed(l, r[1], CLOCK_PREFIX)
+        claim(s, r[2])
         local h = tonumber(r[3])
-        return { candidates = { { h % 12, 0 }, { h % 12 + 12, 0 } }, ambiguous = true }
+        return { candidates = { { h % 12, 0 }, { h % 12 + 12, 0 } }, ambiguous = true, mode = mode }
     end
 
     return nil
@@ -331,8 +372,40 @@ local function extractPriority(l, isFree, claim)
     return nil
 end
 
--- Returns { kind = "today"|"tonight"|"tomorrow"|"weekday", wday = n } or nil.
+-- Returns { kind = "today"|"tonight"|"tomorrow"|"weekday", wday = n,
+-- part = "morning"|"night"|nil, roll = bool, mode = "after"|"before"|"by"|nil }
+-- or nil. part: "tomorrow morning", "friday night". roll: "in the morning"
+-- means tomorrow once this morning has passed.
 local function extractDay(l, isFree, claim)
+    -- "tomorrow morning", "friday night": extend the span over the part word.
+    local function withPart(day, s, e)
+        if day.kind ~= "tonight" then
+            local ps, pe, w = l:find("^%s+(%a+)%f[%W]", e + 1)
+            local part = (w == "morning") and "morning" or (w == "night" or w == "evening") and "night" or nil
+            if part and isFree(ps, pe) then
+                day.part = part
+                e = pe
+            end
+        end
+        local st
+        st, day.mode = prefixed(l, s, DAY_PREFIX)
+        claim(st, e)
+        return day
+    end
+
+    local phrases = {
+        { "this%s+morning", "today", "morning" }, { "in%s+the%s+morning", "today", "morning", true },
+        { "this%s+evening", "tonight", "night" }, { "in%s+the%s+evening", "tonight", "night" },
+    }
+    for _, entry in ipairs(phrases) do
+        local r = findFree(l, "%f[%w]" .. entry[1] .. "%f[%W]", isFree)
+        if r then
+            local st, mode = prefixed(l, r[1], DAY_PREFIX)
+            claim(st, r[2])
+            return { kind = entry[2], part = entry[3], roll = entry[4], mode = mode }
+        end
+    end
+
     local simple = {
         { "today", "today" }, { "tonight", "tonight" },
         { "tomorrow", "tomorrow" }, { "tmrw", "tomorrow" }, { "tmr", "tomorrow" },
@@ -343,8 +416,7 @@ local function extractDay(l, isFree, claim)
     for _, entry in ipairs(simple) do
         local r = findFree(l, "%f[%w]" .. entry[1] .. "%f[%W]", isFree)
         if r then
-            claim(r[1], r[2])
-            return { kind = entry[2] }
+            return withPart({ kind = entry[2] }, r[1], r[2])
         end
     end
 
@@ -354,10 +426,10 @@ local function extractDay(l, isFree, claim)
         if not s then return nil end
         if isFree(s, e) then
             local ps = extendPrefix(l, s, { "on", "next", "this" })
-            local wday = WEEKDAYS_FULL[word] or (ps ~= s and WEEKDAYS_SHORT[word])
+            local gs = prefixed(l, ps, DAY_PREFIX)
+            local wday = WEEKDAYS_FULL[word] or (gs ~= s and WEEKDAYS_SHORT[word])
             if wday then
-                claim(ps, e)
-                return { kind = "weekday", wday = wday }
+                return withPart({ kind = "weekday", wday = wday }, ps, e)
             end
         end
         init = e + 1
@@ -410,7 +482,8 @@ local function extractRepeat(l, isFree, claim)
     if r then
         claim(r[1], r[2])
         local w = r[3]
-        if w == "day" or w == "morning" then return found({ unit = "day", n = 1 }) end
+        if w == "day" then return found({ unit = "day", n = 1 }) end
+        if w == "morning" then return found({ unit = "day", n = 1, day = { kind = "today", part = "morning" } }) end
         if w == "night" or w == "evening" then return found({ unit = "day", n = 1, day = { kind = "tonight" } }) end
         if w == "week" then return found({ unit = "day", n = 7 }) end
         local wday = WEEKDAYS_FULL[w] or WEEKDAYS_SHORT[w]
@@ -726,11 +799,16 @@ local function resolveTime(ctx, clock, day, rolling)
         })
     end
 
+    local isNight = day and (day.kind == "tonight" or day.part == "night")
+    local isMorning = day and day.part == "morning"
+
     local candidates
     if clock then
         candidates = clock.candidates
-        if clock.ambiguous and day and day.kind == "tonight" then
+        if clock.ambiguous and isNight then
             candidates = { candidates[2] } -- pm
+        elseif clock.ambiguous and isMorning then
+            candidates = { candidates[1] } -- am
         elseif clock.ambiguous and day and day.kind ~= "today" then
             -- Future day, no "next occurrence" to go by: prefer daytime hours.
             -- 7..11 -> am, 12 and 1..6 -> pm.
@@ -738,15 +816,15 @@ local function resolveTime(ctx, clock, day, rolling)
             candidates = { (am >= 7 and am <= 11) and candidates[1] or candidates[2] }
         end
     else
-        local hour = (day.kind == "tonight") and DEFAULT_TONIGHT_HOUR or DEFAULT_DAY_HOUR
-        candidates = { { hour, 0 } }
+        local mins = isNight and (ctx.night or DEFAULT_NIGHT) or (ctx.morning or DEFAULT_MORNING)
+        candidates = { { math.floor(mins / 60), mins % 60 } }
     end
 
     local offsets
     if not day then
         offsets = { 0, 1 }
     elseif day.kind == "today" or day.kind == "tonight" then
-        offsets = rolling and { 0, 1 } or { 0 }
+        offsets = (rolling or day.roll) and { 0, 1 } or { 0 }
     elseif day.kind == "tomorrow" then
         offsets = { 1 }
     else -- weekday
@@ -770,6 +848,124 @@ local function resolveTime(ctx, clock, day, rolling)
 end
 
 ---------------------------------------------------------------------------
+-- Place windows: "tomorrow when I get to IF", "before 8pm at the bank"
+---------------------------------------------------------------------------
+
+-- Midnight `days` after the day containing `base`, plus `mins` minutes.
+-- Calendar arithmetic, so it's right across daylight-saving changes.
+local function dayPlus(ctx, base, days, mins)
+    local t = (ctx.date or date)("*t", base)
+    return (ctx.time or time)({
+        year = t.year, month = t.month, day = t.day + days,
+        hour = math.floor(mins / 60), min = mins % 60, sec = 0,
+    })
+end
+
+-- Minutes after midnight for a clock on the day starting at `base`.
+local function clockMinutes(ctx, clock, day, base)
+    local c = clock.candidates
+    if #c == 1 then return c[1][1] * 60 + c[1][2] end
+    local pick
+    if day and (day.kind == "tonight" or day.part == "night") then
+        pick = c[2]
+    elseif day and day.part == "morning" then
+        pick = c[1]
+    elseif day and day.kind ~= "today" then
+        pick = (c[1][1] >= 7 and c[1][1] <= 11) and c[1] or c[2]   -- daytime hours
+    else
+        -- today: the next one still ahead ("after 9" at 10am means 9pm)
+        pick = c[2]
+        for _, cand in ipairs(c) do
+            if dayPlus(ctx, base, 0, cand[1] * 60 + cand[2]) > ctx.now then pick = cand; break end
+        end
+    end
+    return pick[1] * 60 + pick[2]
+end
+
+-- The window for a place reminder with a time. Returns { after, before }
+-- (either may be nil) or nil, error. A day lasts only that day.
+-- rolling: periodic, so a window that has already closed is fine (the
+-- scheduler moves it on).
+local function placeWindow(ctx, clock, day, rolling)
+    local now = ctx.now
+    local t = (ctx.date or date)("*t", now)
+    local off = 0
+    local partMins
+    if day then
+        if day.kind == "tonight" or day.part == "night" then partMins = ctx.night or DEFAULT_NIGHT
+        elseif day.part == "morning" then partMins = ctx.morning or DEFAULT_MORNING end
+        if day.kind == "tomorrow" then
+            off = 1
+        elseif day.kind == "weekday" then
+            off = (day.wday - t.wday) % 7
+        elseif day.roll and dayPlus(ctx, now, 0, partMins) <= now then
+            off = 1   -- "in the morning", said after this morning
+        end
+    end
+    local base = dayPlus(ctx, now, off, 0)
+    local dayEnd = dayPlus(ctx, base, 1, 0)
+    local cmode, dmode = clock and clock.mode, day and day.mode
+
+    local w
+    if cmode == "before" or cmode == "by" then
+        -- "before 8pm", "friday before 8pm" (open from the start of friday)
+        w = { before = dayPlus(ctx, base, 0, clockMinutes(ctx, clock, day, base)) }
+        if day and not dmode then w.after = dayPlus(ctx, base, 0, partMins or 0) end
+    elseif dmode == "before" or dmode == "by" then
+        -- "by friday" (end of friday), "before friday" (start), "by tonight"
+        local mins = clock and clockMinutes(ctx, clock, day, base) or partMins
+        if mins then
+            w = { before = dayPlus(ctx, base, 0, mins) }
+        else
+            w = { before = (dmode == "by") and dayEnd or base }
+        end
+    else
+        -- "tomorrow", "after 5pm", "tonight": from then until the end of that day
+        local mins = clock and clockMinutes(ctx, clock, day, base) or partMins or 0
+        w = { after = dayPlus(ctx, base, 0, mins), before = dayEnd }
+    end
+    if not rolling and w.before <= now then
+        return nil, "That time has already passed today."
+    end
+    return w
+end
+
+-- Turn a place trigger plus any time / repeat into the final trigger.
+-- each: "whenever" / "always" (every arrival).
+local function placeTrigger(ctx, place, each, rep, rel, clock, day)
+    local spec = rep and not rep.generic and rep or nil
+    if spec and spec.unit == "sec" then
+        -- "every 2h when I'm in org": at most once every 2h
+        place.every = { unit = "sec", n = spec.n }
+        if rel then
+            place.after = ctx.now + rel
+        elseif clock or day then
+            local w, err = placeWindow(ctx, clock, day, false)
+            if not w then return nil, err end
+            place.after = w.after
+        end
+    elseif spec or (each and (clock or day)) then
+        -- "every day when I get to org", "whenever I'm in org after 5pm"
+        local d = day or (spec and spec.day) or { kind = "today" }
+        local n = spec and spec.n or ((d.kind == "weekday") and 7 or 1)
+        local w = placeWindow(ctx, clock, d, true)
+        place.after, place.before = w.after, w.before
+        place.every = { unit = "day", n = n }
+        if each then place.each = true end
+    elseif rel then
+        place.after = ctx.now + rel        -- "in 2h when I get to org"
+        if each then place.every = true end
+    elseif clock or day then
+        local w, err = placeWindow(ctx, clock, day, false)
+        if not w then return nil, err end
+        place.after, place.before = w.after, w.before
+    elseif each then
+        place.every = true
+    end
+    return place
+end
+
+---------------------------------------------------------------------------
 -- Public entry point
 ---------------------------------------------------------------------------
 
@@ -789,14 +985,23 @@ function Parser.Parse(text, ctx)
     local rep = extractRepeat(l, isFree, claim)
     local place, placeRepeats = extractPlace(l, text, isFree, claim, ctx.places)
 
-    local trigger
     local rel = extractRelative(l, isFree, claim)
-    if rel then
+    local clock, day
+    if not rel then
+        clock = extractClock(l, isFree, claim)
+        day = extractDay(l, isFree, claim)
+    end
+
+    local trigger
+    if place then
+        -- "tomorrow when I get to IF": the place fires, the time is its window
+        local err
+        trigger, err = placeTrigger(ctx, place, placeRepeats or (rep and rep.generic), rep, rel, clock, day)
+        if not trigger then return nil, err end
+    elseif rel then
         trigger = { type = "time", at = ctx.now + rel }
         if rep and rep.generic then rep = everySeconds(rel) end   -- "always in 2h" = every 2h
     else
-        local clock = extractClock(l, isFree, claim)
-        local day = extractDay(l, isFree, claim)
         if rep and not rep.generic then
             day = day or rep.day
             if not clock and not day and rep.unit == "day" then day = { kind = "today" } end
@@ -813,20 +1018,11 @@ function Parser.Parse(text, ctx)
         end
     end
 
-    if place and trigger then
-        return nil, "I can't do a time and a place together yet. Pick one, e.g. 'when I get to Orgrimmar' or 'at 5pm'."
-    end
     if not trigger then
-        place = place or extractBarePlace(l, text, isFree, claim, ctx.places)
-        if place then
-            if rep and not rep.generic then
-                return nil, "Places repeat every time you arrive. Use 'always' or 'whenever', e.g. " ..
-                    "'whenever I get to Orgrimmar'."
-            end
-            if rep or placeRepeats then place.every = true end
-            trigger = place
-        end
-    elseif rep then
+        -- Bare places ("at IF") only when there's no time, so they don't guess.
+        local bare = extractBarePlace(l, text, isFree, claim, ctx.places)
+        if bare then trigger = placeTrigger(ctx, bare, rep and rep.generic, nil, nil, nil, nil) end
+    elseif trigger.type == "time" and rep then
         trigger.every = { unit = rep.unit, n = rep.n }
     end
 

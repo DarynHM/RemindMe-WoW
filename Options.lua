@@ -404,15 +404,36 @@ local function buildPanel()
     button(content, "Preview", 120, 16, y - 166, function() ns.Indicator.Preview() end)
     button(content, "Back to minimap", 120, 146, y - 166, function() ns.Indicator.ResetPosition() end)
 
-    -- Clock -----------------------------------------------------------
+    -- Times -----------------------------------------------------------
     y = -606
-    header(content, "Clock", y)
+    header(content, "Times", y)
     label(content, "Times like \"at 12pm\" use:", 16, y - 26, "GameFontHighlightSmall")
     dropdown(content, 16, y - 42, 180,
         function() return { { "local", "Local (PC) time" }, { "server", "Realm (server) time" } } end,
         function() return S.clock end,
         function(v) S.clock = v end)
-    content:SetHeight(-(y - 42) + 60)
+
+    -- Every 30 minutes from `from` to `to` (minutes after midnight).
+    local function timeOptions(from, to)
+        local list = {}
+        for m = from, to, 30 do
+            local h = math.floor(m / 60)
+            local h12 = (h % 12 == 0) and 12 or h % 12
+            list[#list + 1] = { m, ("%d:%02d %s"):format(h12, m % 60, h < 12 and "AM" or "PM") }
+        end
+        return list
+    end
+    label(content, "Morning", 16, y - 84, "GameFontNormalSmall")
+    label(content, "for \"tomorrow\", \"friday\", \"morning\"", 16, y - 98, "GameFontDisableSmall")
+    dropdown(content, 16, y - 114, 140, function() return timeOptions(5 * 60, 12 * 60) end,
+        function() return S.morning end,
+        function(v) S.morning = v end)
+    label(content, "Night", 250, y - 84, "GameFontNormalSmall")
+    label(content, "for \"tonight\", \"night\", \"evening\"", 250, y - 98, "GameFontDisableSmall")
+    dropdown(content, 250, y - 114, 140, function() return timeOptions(17 * 60, 23 * 60 + 30) end,
+        function() return S.night end,
+        function(v) S.night = v end)
+    content:SetHeight(-(y - 114) + 60)
 
     -- An unlocked indicator is only shown while this panel is open.
     panel:SetScript("OnShow", function()

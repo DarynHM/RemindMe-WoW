@@ -76,7 +76,8 @@ local function InitDB()
     RemindMeDB = RemindMeDB or {}
     local s = RemindMeDB
 
-    applyDefaults(s, { clock = "local", defaultPriority = "normal", debug = false })
+    applyDefaults(s, { clock = "local", defaultPriority = "normal", debug = false,
+        morning = 540, night = 1200 })   -- minutes after midnight: 9am, 8pm
     s.profiles = s.profiles or {}
     for _, p in ipairs(ns.PRIORITY_ORDER) do
         s.profiles[p] = s.profiles[p] or {}

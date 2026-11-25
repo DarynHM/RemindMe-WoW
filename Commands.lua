@@ -55,6 +55,7 @@ local function showHelp()
     cmd("/remind <what> <when or where>", "add a reminder")
     sub("when", "at 5pm, 17:30, noon, in 20 min, 10m, 1h30m, tomorrow, friday at 9am")
     sub("where", "when I get to Orgrimmar, next time I'm in org, at a trainer / mailbox / bank / AH")
+    sub("both", "tomorrow when I get to IF, before 8pm next time I'm at the bank")
     sub("repeat", "always at 9am, every friday at 7pm, every 2h, daily, whenever I get to org")
     sub("priority", "-L or quietly (low), -M (normal), -H, urgent or ! (high)")
     sub("e.g.", B .. "/remind me to buy potions at 12pm" .. R)
@@ -153,8 +154,14 @@ local function addReminder(msg)
     end
     if trigger.type == "time" then
         trigger.at = ns.Clock.ToReal(trigger.at)
-    elseif trigger.kind == "zone" then
-        trigger.armed = not ns.Places.IsHere(trigger.key)
+    else
+        if trigger.after then trigger.after = ns.Clock.ToReal(trigger.after) end
+        if trigger.before then trigger.before = ns.Clock.ToReal(trigger.before) end
+        -- A window that's already open has had its opening (no popup later).
+        trigger.opened = ns.Scheduler.WindowOpen(trigger, ns.Clock.Now()) or nil
+        if trigger.kind == "zone" then
+            trigger.armed = not ns.Places.IsHere(trigger.key)
+        end
     end
 
     local r = ns.Scheduler.Add(result.message, trigger, result.priority)
@@ -170,7 +177,7 @@ local function addReminder(msg)
             "'.|r I'll match it exactly against zone and subzone names." ..
             (#s > 0 and (" Did you mean " .. table.concat(s, ", ") .. "?") or ""))
     end
-    if trigger.armed == false then
+    if trigger.armed == false and trigger.opened then
         ns.Print("You're in " .. ns.Notify.Escape(trigger.name) ..
             " now, so I'll remind you next time you arrive.")
     end
