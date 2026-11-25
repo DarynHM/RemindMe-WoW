@@ -15,7 +15,7 @@
 --     { unit = "sec", n } (at most every n seconds).
 --     snoozedUntil = epoch|nil, fired = bool, firedAt = epoch|nil }
 -- A fired reminder stays in the list (marked "fired") until it is completed,
--- deleted or snoozed, the same way Slack keeps it until you act on it.
+-- deleted or snoozed.
 --
 -- Repeating reminders (trigger.every) re-arm themselves when they fire: a
 -- time one moves `at` to its next occurrence, a zone one waits until you

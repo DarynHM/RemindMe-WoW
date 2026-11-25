@@ -15,7 +15,7 @@ Built for **WoW Forever**
 
 ## Why I made it
 
-Slack's `/remind` works so well that I wanted the same thing in game. Type it once, then stop thinking about it.
+I wanted a quick way to set reminders without leaving the game. Type it once, then stop thinking about it.
 
 ## Install
 

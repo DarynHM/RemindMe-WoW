@@ -301,7 +301,7 @@ local function buildPanel()
     local title = content:CreateFontString(nil, "ARTWORK", "GameFontNormalLarge")
     title:SetPoint("TOPLEFT", 16, -16)
     title:SetText(PANEL_NAME)
-    label(content, "Slack-style reminders. Type |cffffd100/remind help|r for commands.", 16, -40,
+    label(content, "Reminders in plain English. Type |cffffd100/remind help|r for commands.", 16, -40,
         "GameFontHighlightSmall")
 
     -- Alerts grid: one column per priority ------------------------------

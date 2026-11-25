@@ -1,6 +1,6 @@
 # RemindMe (formerly Nudge): project instructions and context
 
-RemindMe (renamed from Nudge before its first public release) is a World of Warcraft addon: Slack-style natural-language reminders typed as slash commands, such as `/remind at 12pm today buy potions` or `/remind when I get to Orgrimmar, upgrade my weapon skill`. The author is Daryn (GitHub `DarynHM`, formerly `Ki-ches`; repo `DarynHM/RemindMe-WoW`). It is MIT licensed.
+RemindMe (renamed from Nudge before its first public release) is a World of Warcraft addon: natural-language reminders typed as slash commands, such as `/remind at 12pm today buy potions` or `/remind when I get to Orgrimmar, upgrade my weapon skill`. The author is Daryn (GitHub `DarynHM`, formerly `Ki-ches`; repo `DarynHM/RemindMe-WoW`). It is MIT licensed.
 
 **How the code fits together** (data flow, trigger model, parser pipeline, firing rules, recipes for common changes) is in `.claude/architecture.md`. Read it before changing the parser or scheduler.
 
@@ -93,7 +93,7 @@ Saved variables: `RemindMeDB` (account settings) and `RemindMeCharDB` (per-chara
   - Window words: `after` / `from` / `starting` and `before` / `by` / `until`, claimed only straight before a time or day. Without a place they just set the time.
   - A day lasts only that day. A one-off whose window closes unfired alerts as missed; a periodic one (`every day when I get to org`, `every = { unit = "day", n }`) moves on silently. `every 2h when in org` is a cooldown (`{ unit = "sec", n }`); "whenever" plus a time sets `each` (every arrival inside the window).
   - Already in the zone when the window opens: popup (`StaticPopupDialogs.REMINDME_ALREADY_HERE`) with Cancel reminder (Skip this time for periodic) / Next arrival; Escape keeps it.
-- **A fired reminder stays in the list** (Slack-style) until it's done, deleted or snoozed. Reminders that came due while offline fire on login, marked "missed".
+- **A fired reminder stays in the list** until it's done, deleted or snoozed. Reminders that came due while offline fire on login, marked "missed".
 
 ## Gotchas learned the hard way
 

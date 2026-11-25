@@ -1,6 +1,6 @@
 ## Interface: 16001
 ## Title: RemindMe
-## Notes: Slack-style reminders from slash commands. /remind at 12pm today buy potions
+## Notes: Plain-English reminders from a slash command. /remind at 12pm today buy potions
 ## Author: Daryn
 ## Version: @project-version@
 ## IconTexture: Interface\Icons\INV_Misc_PocketWatch_01

@@ -53,7 +53,7 @@ local UNITS = {
     w = 604800, wk = 604800, wks = 604800, week = 604800, weeks = 604800,
 }
 
-local DEFAULT_MORNING = 9 * 60   -- "tomorrow" with no time -> 9am (Slack does the same)
+local DEFAULT_MORNING = 9 * 60   -- "tomorrow" with no time -> 9am
 local DEFAULT_NIGHT = 20 * 60    -- "tonight" -> 8pm
 
 ---------------------------------------------------------------------------
