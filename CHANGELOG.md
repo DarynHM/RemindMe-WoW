@@ -1,5 +1,9 @@
 # RemindMe
 
+## 0.1.2
+
+- The reminder list window now just says "No reminders." when it's empty.
+
 ## 0.1.1
 
 - Reworded the addon description in the AddOns list and the options panel.
