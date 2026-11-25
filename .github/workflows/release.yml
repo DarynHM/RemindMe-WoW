@@ -1,0 +1,32 @@
+# Builds the addon zip with the BigWigs packager and publishes a GitHub
+# release whenever a version tag is pushed (git tag -a v0.1.0 -m "..." &&
+# git push origin v0.1.0). WowUp Hub picks up each new release.
+name: Package and release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    # Actions are pinned to commit SHAs (tag in the comment) so a moved tag
+    # can't swap in different code; bump them deliberately.
+    steps:
+      - name: Clone project
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          fetch-depth: 0  # full history, needed for tags and changelog
+          persist-credentials: false
+
+      - name: Package and release
+        uses: BigWigsMods/packager@01e8631a69c69d7654c788d152630d5fed9e3812 # v2.7.0
+        env:
+          # Only GitHub Releases: no CurseForge / WoWInterface / Wago keys are
+          # set, so the packager skips those uploads. Token goes to this step only.
+          GITHUB_OAUTH: ${{ secrets.GITHUB_TOKEN }}

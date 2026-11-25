@@ -1,0 +1,11 @@
+package-as: RemindMe
+
+manual-changelog: CHANGELOG.md
+
+ignore:
+  - tests
+  - README.md
+  - CLAUDE.md
+  - CHANGELOG.md
+  - .previews
+  - .github

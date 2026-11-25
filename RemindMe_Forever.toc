@@ -1,0 +1,21 @@
+## Interface: 16001
+## Title: RemindMe
+## Notes: Slack-style reminders from slash commands. /remind at 12pm today buy potions
+## Author: Daryn
+## Version: @project-version@
+## IconTexture: Interface\Icons\INV_Misc_PocketWatch_01
+## X-Website: https://github.com/DarynHM/RemindMe-WoW
+## SavedVariables: RemindMeDB
+## SavedVariablesPerCharacter: RemindMeCharDB
+
+Parser.lua
+Clock.lua
+Places.lua
+Media.lua
+Flash.lua
+Notify.lua
+Scheduler.lua
+Indicator.lua
+Options.lua
+Commands.lua
+Core.lua

@@ -1,0 +1,58 @@
+REMINDME IN-GAME TEST CHECKLIST
+One command per line. Replace <angle brackets> with your own value.
+Lines starting with "--" are notes, not commands.
+
+-- SETUP (restart the game first: there's a new .toc file)
+/console scriptErrors 1
+/remind debug
+/remind options
+
+-- ICON AND PRIORITIES (keep the options panel open, wait ~1 minute)
+/remind ! in 1m high test
+/remind in 1m normal test
+/remind quietly in 1m low test
+/remind list
+-- When they fire: tooltip text coloured by priority, no "(low)" tag
+-- Ctrl-click = options, Shift-click = list, Left = done, Right = snooze
+-- Options: opacity slider, "Only when a reminder is due", Lock position
+-- Options: sound list scrolls, play buttons work, Preview each animation
+/remind clear
+
+-- TIME AND CLOCK
+/remind in 2m time test
+/remind clock server
+/remind at <a time 3 minutes from now> server clock test
+/remind clock local
+
+-- MISSED REMINDERS (log out for 3+ minutes after this, then log back in)
+/remind in 2m missed test
+
+-- REPEATING
+/remind every 2m repeat test
+/remind done
+/remind list
+/remind delete <its code>
+
+-- PLACES (walk into the zone afterwards)
+/remind where
+/remind when I get to <a nearby zone> place test
+/remind whenever I get to <a nearby zone> repeat place test
+
+-- NPCS (open each window afterwards)
+/remind next time I'm at a mailbox mail test
+/remind next time I'm at a vendor vendor test
+/remind next time I'm at the bank bank test
+/remind next time I'm at a flight master fp test
+
+-- FEATURE CHECKS (each prints yes / no, paste the output to Claude)
+/run print("C_Map", C_Map and C_Map.GetBestMapForUnit and "yes" or "no")
+/run print("FlashClientIcon", FlashClientIcon and "yes" or "no")
+/run print("GetGameTime", GetGameTime and GetGameTime() or "no")
+/run print("ProcAtlas", C_Texture and C_Texture.GetAtlasInfo and C_Texture.GetAtlasInfo("UI-HUD-ActionBar-Proc-Loop-Flipbook") and "yes" or "no")
+/run print("MaskTexture", UIParent.CreateMaskTexture and "yes" or "no")
+/run print("MenuScroll", MenuUtil and "yes" or "no")
+
+-- CLEANUP
+/remind clear
+/remind list
+/remind debug
