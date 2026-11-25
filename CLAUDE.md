@@ -2,6 +2,8 @@
 
 RemindMe (renamed from Nudge before its first public release) is a World of Warcraft addon: Slack-style natural-language reminders typed as slash commands, such as `/remind at 12pm today buy potions` or `/remind when I get to Orgrimmar, upgrade my weapon skill`. The author is Daryn (GitHub `DarynHM`, formerly `Ki-ches`; repo `DarynHM/RemindMe-WoW`). It is MIT licensed.
 
+**How the code fits together** (data flow, trigger model, parser pipeline, firing rules, recipes for common changes) is in `.claude/architecture.md`. Read it before changing the parser or scheduler.
+
 ## Working rules (from the user, always follow)
 
 - **Edit the repo, then copy to the game.** The source of truth is `B:\_Projects\WoW\Nudge` (a git repo with the addon files at its root; the local folder keeps its old name). After every change, copy only `*.lua`, `RemindMe.toc` and `RemindMe_Forever.toc` to `G:\Games\World of Warcraft\_forever_\Interface\AddOns\RemindMe`. Never edit the game folder directly.

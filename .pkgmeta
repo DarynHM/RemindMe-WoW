@@ -8,5 +8,6 @@ ignore:
   - CLAUDE.md
   - CHANGELOG.md
   - docs
+  - .claude
   - .previews
   - .github
