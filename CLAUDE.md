@@ -36,8 +36,9 @@ RemindMe (renamed from Nudge before its first public release) is a World of Warc
 | `Flash.lua` | Screen-edge flash and taskbar flash |
 | `Notify.lua` | `Fire(reminder, note)` runs the channels of the reminder's priority profile |
 | `Scheduler.lua` | Reminder list, letter codes, `Check` (time ticker every 5 s), `CheckPlaces`, `CheckNpc`, `Snooze`, `Sorted`, `Fired` |
-| `Indicator.lua` | Movable mail-style icon: tooltip, left-click done, right-click snooze, shift-click list, animations |
+| `Indicator.lua` | Movable mail-style icon: tooltip, left-click done, right-click snooze, shift-click list window, ctrl-click options, animations |
 | `Options.lua` | Panel in Esc > Options > AddOns: per-priority alert grid, indicator settings, clock |
+| `ListWindow.lua` | Reminder list window (`/remind list`, Shift-click): rows from `Scheduler.ByPriority`, text from `Scheduler.TriggerText` / `StatusText`, priority dropdown, Done / Delete, resizable, draggable column widths saved in `RemindMeDB.window` |
 | `Commands.lua` | `/remind` (the only slash command). Anything that isn't a management command becomes a new reminder |
 | `Core.lua` | `ns.Print`, `ns.Debug`, priority tables, saved-variable defaults, login startup |
 
@@ -97,7 +98,7 @@ Saved variables: `RemindMeDB` (account settings) and `RemindMeCharDB` (per-chara
 
 ## Testing and debugging
 
-- `tests/run.lua` covers the parser, letter codes, place arming, NPC firing and abbreviations (452 checks at the time of writing).
+- `tests/run.lua` covers the parser, letter codes, place arming, NPC firing and abbreviations (462 checks at the time of writing).
 - Smoke harnesses with stubbed WoW globals have been used to run the real `/remind` handler offline. Recreate one if needed: stub `SlashCmdList`, `CreateFrame`, the `Get*ZoneText` functions and `print`, then load the addon files with `loadfile(f)("RemindMe", ns)`.
 - **In game:**
   - `/remind debug` shows parses, zone changes and NPC events.
@@ -122,5 +123,5 @@ Saved variables: `RemindMeDB` (account settings) and `RemindMeCharDB` (per-chara
 ## Roadmap / not started
 
 - Time + place together ("tomorrow when I get to IF").
-- A reminder list window.
+- (Done) Reminder list window: `ListWindow.lua`. `ns.OnRemindersChanged` (Core.lua) refreshes both the icon and the window.
 - In-game verification of: the options panel, indicator, priorities and flashes, server clock, missed reminders, place triggers, C_Map availability.

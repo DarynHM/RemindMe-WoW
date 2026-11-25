@@ -32,10 +32,11 @@ Built for **WoW Forever** (Interface 16001).
 - **Repeating reminders**: `always at 9am`, `every day at 5pm`, `daily`, `every friday at 7pm`, `every 2h`, `every other day`, `every night`, and for places `always when I get to org` / `whenever I'm at a trainer` / `every time I'm in IF`. A repeating reminder schedules itself again when it fires; `/remind done` dismisses the current alert and `/remind delete` stops it.
 - **Priorities**: Low / Normal / High. Set them with words (`quietly`, `low priority`, `urgent`, `important`, `loudly`, `high priority`), `!` for high, or the shorthands `-L`, `-M` (or `-N`) and `-H` anywhere in the reminder (`-low`, `-med`, `-high` also work). Each priority has its own alerts.
 - **Configurable alerts per priority**: chat message, raid-warning text, sound (built-in sounds plus any from LibSharedMedia if another addon provides it), screen edge flash, and taskbar flash when the game is in the background.
-- **On-screen reminder icon**: a round icon that sits beside the minimap mail icon by default, or can be dragged anywhere. Hover to see what's due (coloured by priority); left-click for done, right-click to snooze 10 minutes, shift-click to list everything, ctrl-click for options. Choice of icon, size, opacity, whether it shows only while something is due, and an animation per priority (pulse, glow, ring, sparkles, comet).
+- **On-screen reminder icon**: a round icon that sits beside the minimap mail icon by default, or can be dragged anywhere. Hover to see what's due (coloured by priority); left-click for done, right-click to snooze 10 minutes, shift-click to open the reminder list, ctrl-click for options. Choice of icon, size, opacity, whether it shows only while something is due, and an animation per priority (pulse, glow, ring, sparkles, comet).
 - **Sound picker with preview**: each sound in the list has a play button, and long lists (LibSharedMedia) scroll.
 - **Local or realm clock**: "at 12pm" can follow your PC clock or server time.
 - **Missed reminders**: anything that came due while you were offline fires when you log in, marked as missed.
+- **Reminder list window**: Shift-click the icon or type `/remind list`. Every reminder in priority order, with where / when it triggers, its status, a priority dropdown, and Done / Delete buttons. Resizable; columns fit their content and can be dragged wider (double-click a column edge to reset).
 - **Options panel** in *Esc → Options → AddOns → RemindMe*.
 
 ## Commands
@@ -43,7 +44,8 @@ Built for **WoW Forever** (Interface 16001).
 | Command | What it does |
 |---|---|
 | `/remind <what> <when>` | Add a reminder |
-| `/remind list` | Show reminders, each with a short letter code (`a`, `b`, `c`…) |
+| `/remind list` | Open the reminder list window (same as Shift-clicking the icon) |
+| `/remind list chat` | Print reminders in chat, each with a short letter code (`a`, `b`, `c`…) |
 | `/remind done <code>` | Complete a reminder, e.g. `/remind done b` (a repeating one is just dismissed until next time) |
 | `/remind delete <code>` | Delete a reminder (stops a repeating one) |
 | `/remind snooze [code] [time]` | Snooze (default: most important due reminder, 10 minutes). Snoozing a place reminder turns it into a timed one |

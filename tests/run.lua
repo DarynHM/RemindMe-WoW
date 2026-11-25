@@ -474,6 +474,46 @@ do
     check("snoozed place fires on time", inside.fired)
 end
 
+-- List window data: priority order, Triggers and Status text
+do
+    local now = NOW
+    local sns = {
+        charDB = { reminders = {}, nextId = 1 },
+        Clock = { Now = function() return now end, Describe = function(t) return "T" .. (t - NOW) end },
+        PRIORITY_RANK = { low = 1, normal = 2, high = 3 },
+        settings = { defaultPriority = "normal" },
+    }
+    sns.PriorityOf = function(r) return r.priority or sns.settings.defaultPriority end
+    assert(loadfile("Scheduler.lua"))("RemindMe", sns)
+    local S = sns.Scheduler
+    local lowLater  = S.Add("low later", { type = "time", at = NOW + 600 }, "low")
+    local normPlace = S.Add("normal place", { type = "place", kind = "zone", key = "orgrimmar", name = "Orgrimmar", armed = false })
+    local normSoon  = S.Add("normal soon", { type = "time", at = NOW + 60 })
+    local highLater = S.Add("high later", { type = "time", at = NOW + 900 }, "high")
+    local highFired = S.Add("high fired", { type = "time", at = NOW + 1200 }, "high")
+    highFired.fired, highFired.firedAt = true, NOW + 30
+    local daily = S.Add("daily", { type = "time", at = NOW + 300, every = { unit = "day", n = 1 } }, "low")
+    local npc = S.Add("swords", { type = "place", kind = "npc", npc = "trainer", name = "a trainer", every = true })
+    local snoozed = S.Add("snoozed", { type = "time", at = NOW + 100 })
+    snoozed.snoozedUntil = NOW + 400
+
+    local order = {}
+    for i, r in ipairs(S.ByPriority()) do order[i] = r.text end
+    check("ByPriority order", table.concat(order, ",") ==
+        "high fired,high later,normal soon,snoozed,normal place,swords,daily,low later",
+        table.concat(order, ","))
+
+    check("TriggerText time", S.TriggerText(normSoon) == "T60")
+    check("TriggerText repeating", S.TriggerText(daily) == "T300, every day", S.TriggerText(daily))
+    check("TriggerText zone (unarmed)", S.TriggerText(normPlace) == "when you get to Orgrimmar (after you leave)",
+        S.TriggerText(normPlace))
+    check("TriggerText npc", S.TriggerText(npc) == "every time you're at a trainer", S.TriggerText(npc))
+    check("StatusText waiting", S.StatusText(lowLater) == "waiting")
+    check("StatusText fired", S.StatusText(highFired) == "fired T30", S.StatusText(highFired))
+    check("StatusText snoozed", S.StatusText(snoozed) == "snoozed until T400", S.StatusText(snoozed))
+    check("highLater untouched", not highLater.fired)
+end
+
 -- Release packaging: RemindMe.toc (fallback) and RemindMe_Forever.toc (WowUp Hub's
 -- Forever flavour) must stay identical, and every listed file must exist.
 do

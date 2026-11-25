@@ -17,5 +17,6 @@ Notify.lua
 Scheduler.lua
 Indicator.lua
 Options.lua
+ListWindow.lua
 Commands.lua
 Core.lua

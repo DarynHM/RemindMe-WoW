@@ -52,6 +52,19 @@ Lines starting with "--" are notes, not commands.
 /run print("MaskTexture", UIParent.CreateMaskTexture and "yes" or "no")
 /run print("MenuScroll", MenuUtil and "yes" or "no")
 
+-- LIST WINDOW (restart the game first: ListWindow.lua is a new file)
+/remind -h in 30m window high
+/remind in 20m window normal
+/remind -l in 10m window low
+/remind when I get to <a nearby zone> window place
+/remind list
+-- Order: High, Normal (timed, then place), Low. Low text is light blue.
+-- Change a priority with the dropdown, press Done on one, Delete on another
+-- Drag the bottom-right grip to resize; drag a header edge to widen a column
+-- Double-click a header edge to reset it; Escape closes; /reload keeps size and position
+-- Shift-click the icon also opens and closes it
+/remind list chat
+
 -- CLEANUP
 /remind clear
 /remind list

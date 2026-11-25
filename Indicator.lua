@@ -3,7 +3,7 @@
 -- Visible while fired reminders are waiting (or always, if "only when due" is
 -- off), while previewing, or while unlocked with the options panel open.
 --   Hover: list of due reminders.  Left-click: complete newest.
---   Right-click: snooze newest 10 min.  Shift-click: print full list.
+--   Right-click: snooze newest 10 min.  Shift-click: open the reminder list window.
 --   Ctrl-click: open the options panel.
 
 local _, ns = ...
@@ -304,7 +304,7 @@ local function showTooltip(self)
         end
         GameTooltip:AddLine(" ")
         GameTooltip:AddLine("Left-click: done   Right-click: snooze 10 min", 0.6, 0.6, 0.6)
-        GameTooltip:AddLine("Shift-click: list all reminders", 0.6, 0.6, 0.6)
+        GameTooltip:AddLine("Shift-click: open reminder list", 0.6, 0.6, 0.6)
     end
     GameTooltip:AddLine("Ctrl-click: options", 0.6, 0.6, 0.6)
     if not cfg().locked then
@@ -320,7 +320,8 @@ local function onClick(self, mouseButton)
         return
     end
     if IsShiftKeyDown() then
-        ns.Commands.ShowList()
+        GameTooltip:Hide()
+        ns.ListWindow.Toggle()
         return
     end
     local r = ns.Scheduler.MostRecentFired()
@@ -475,4 +476,4 @@ function Indicator.Preview(priority)
     C_Timer.After(PREVIEW_SECONDS + 0.1, Indicator.Refresh)
 end
 
-ns.OnRemindersChanged = Indicator.Refresh
+-- ns.OnRemindersChanged (Core.lua) refreshes the indicator and the list window.

@@ -19,14 +19,7 @@ end
 -- What's next for a reminder: "today 5:00 PM", "today 9:00 AM, every day",
 -- "every time you get to Orgrimmar (after you leave)".
 local function upcoming(r)
-    local where = ns.Scheduler.PlaceText(r)
-    if where then
-        if r.trigger.armed == false then where = where .. " (after you leave)" end
-        return where
-    end
-    local every = ns.Scheduler.EveryText(r)
-    local at = r.trigger.at
-    return (at and ns.Clock.Describe(at) or "?") .. (every and (", " .. every) or "")
+    return ns.Scheduler.TriggerText(r)
 end
 
 -- "next today 9:00 AM, every day" / "every time you get to Orgrimmar"
@@ -66,7 +59,8 @@ local function showHelp()
     sub("priority", "-L or quietly (low), -M (normal), -H, urgent or ! (high)")
     sub("e.g.", B .. "/remind me to buy potions at 12pm" .. R)
     sub("e.g.", B .. "/remind when I get to Orgrimmar, upgrade my weapon skill" .. R)
-    cmd("/remind list", "your reminders and their letter codes")
+    cmd("/remind list", "open the reminder list window (or Shift-click the icon)")
+    cmd("/remind list chat", "print your reminders and their letter codes in chat")
     cmd("/remind done <code>", "complete one, e.g. /remind done b (repeating: dismiss this alert)")
     cmd("/remind delete <code>", "delete one (stops a repeating one)")
     cmd("/remind snooze [code] [time]", "snooze (default 10 min)")
@@ -188,8 +182,10 @@ local function handle(msg)
 
     if lower == "" or lower == "help" or lower == "?" then
         showHelp()
-    elseif lower == "list" or lower == "ls" then
+    elseif lower == "list chat" or lower == "ls chat" then
         showList()
+    elseif lower == "list" or lower == "ls" then
+        ns.ListWindow.Open()
     elseif lower:match("^done%s+%a+$") or lower:match("^complete%s+%a+$") then
         withCode(lower:match("(%a+)$"), function(r)
             if ns.Scheduler.Complete(r) then

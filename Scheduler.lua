@@ -149,6 +149,48 @@ function Scheduler.EveryText(r)
     return "every " .. e.n .. " days"
 end
 
+-- Where / when it triggers (chat list, window "Triggers" column):
+-- "today 5:00 PM, every day", "when you get to Orgrimmar (after you leave)".
+function Scheduler.TriggerText(r)
+    local where = Scheduler.PlaceText(r)
+    if where then
+        if r.trigger.armed == false then where = where .. " (after you leave)" end
+        return where
+    end
+    local every = Scheduler.EveryText(r)
+    local at = r.trigger and r.trigger.at
+    return (at and ns.Clock.Describe(at) or "?") .. (every and (", " .. every) or "")
+end
+
+-- Window "Status" column: "fired 5:02 PM", "snoozed until 5:30 PM", "waiting".
+function Scheduler.StatusText(r)
+    if r.fired then
+        local at = r.firedAt or Scheduler.DueTime(r)
+        return "fired" .. (at and (" " .. ns.Clock.Describe(at)) or "")
+    elseif r.snoozedUntil then
+        return "snoozed until " .. ns.Clock.Describe(r.snoozedUntil)
+    end
+    return "waiting"
+end
+
+-- Window order: High, Normal, Low; within a priority fired first, then the
+-- soonest due, then place reminders (no due time).
+function Scheduler.ByPriority()
+    local list = {}
+    for _, r in ipairs(reminders()) do list[#list + 1] = r end
+    local rank, HUGE = ns.PRIORITY_RANK, math.huge
+    table.sort(list, function(a, b)
+        local pa, pb = rank[ns.PriorityOf(a)] or 2, rank[ns.PriorityOf(b)] or 2
+        if pa ~= pb then return pa > pb end
+        local fa, fb = a.fired and true or false, b.fired and true or false
+        if fa ~= fb then return fa end
+        local da, db = Scheduler.DueTime(a) or HUGE, Scheduler.DueTime(b) or HUGE
+        if da ~= db then return da < db end
+        return a.id < b.id
+    end)
+    return list
+end
+
 -- Next occurrence of a repeating time trigger strictly after `now`.
 function Scheduler.NextAt(t, now)
     local at, e = t.at, t.every

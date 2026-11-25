@@ -27,7 +27,7 @@ ns.PRIORITY_ORDER = { "low", "normal", "high" }
 ns.PRIORITY_RANK = { low = 1, normal = 2, high = 3 }
 ns.PRIORITY_LABEL = { low = "Low", normal = "Normal", high = "High" }
 ns.PRIORITY_COLOR = {          -- hex for chat strings, rgb for textures/tooltips
-    low    = { hex = "ff9d9d9d", r = 0.62, g = 0.62, b = 0.62 },
+    low    = { hex = "ff66b3ff", r = 0.40, g = 0.70, b = 1.00 },   -- light blue (grey was hard to read)
     normal = { hex = "ffffd100", r = 1.00, g = 0.82, b = 0.00 },
     high   = { hex = "ffff5a2a", r = 1.00, g = 0.35, b = 0.16 },
 }
@@ -37,6 +37,13 @@ function ns.PriorityOf(r)
     local p = r and r.priority
     if p and ns.PRIORITY_RANK[p] then return p end
     return ns.settings.defaultPriority
+end
+
+-- Everything that shows reminder state refreshes from here (Scheduler calls
+-- it on every change).
+function ns.OnRemindersChanged()
+    if ns.Indicator then ns.Indicator.Refresh() end
+    if ns.ListWindow then ns.ListWindow.Refresh() end
 end
 
 function ns.Colorize(priority, text)
@@ -82,6 +89,8 @@ local function InitDB()
     s.indicator = s.indicator or {}
     applyDefaults(s.indicator, { enabled = true, locked = true, icon = "watch", scale = 1,
         alpha = 1, onlyWhenDue = true })
+    s.window = s.window or {}          -- list window: left, top, w, h
+    s.window.cols = s.window.cols or {} -- column widths you dragged
     s.version = SETTINGS_VERSION
     ns.settings = s
 
