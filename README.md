@@ -1,77 +1,64 @@
 # RemindMe
 
-Natural-language `/remind` reminders for World of Warcraft, with priority-based alerts and an on-screen reminder icon.
-
-Type a reminder the way you'd say it in Slack, and RemindMe works out when to remind you:
+**Set reminders in WoW by typing them the way you'd say them.** RemindMe works out when (or where) you mean and nudges you at the right moment, with a chat message, a sound, a screen flash and a little icon by the minimap.
 
 ```
-/remind At 12pm today, remind me to buy potions
-/remind repair in 30 minutes
-/remind 1h30m check the auction house
-/remind ! tomorrow at 7pm raid
-/remind quietly in 10m stretch
-/remind When I get to Orgrimmar, remind me to upgrade my weapon skill
-/remind next time I'm at a trainer learn swords
-/remind me always at 9am stretch
-/remind whenever I get to org, repair
+/remind in 30m repair
+/remind at 7pm tomorrow raid
+/remind when I get to Orgrimmar, upgrade my weapon skill
+/remind next time I'm at a mailbox, send mats to my alt
+/remind every day at 9am do the daily quests
 ```
 
 Built for **WoW Forever** (Interface 16001).
 
+## Why I made it
+
+I kept forgetting things mid-session: train when I'm next in town, sell the junk, check the auction house in an hour. Slack's `/remind` works so well that I wanted the same thing in game. Type it once, then stop thinking about it.
+
 ## Install
 
-- **WowUp**: search for **RemindMe** in WowUp's Get Addons tab (WowUp Hub) with your WoW Forever install selected.
-- **Manually**: download the RemindMe zip from [Releases](https://github.com/DarynHM/RemindMe-WoW/releases) and extract it into `World of Warcraft\_forever_\Interface\AddOns`, so you end up with `AddOns\RemindMe\RemindMe.toc`.
+- **WowUp:** search for **RemindMe** in Get Addons with your WoW Forever install selected.
+- **Manually:** download the zip from [Releases](https://github.com/DarynHM/RemindMe-WoW/releases) and extract it into `World of Warcraft\_forever_\Interface\AddOns`.
 
-## Features
+## What it can do
 
-- **Natural-language times, anywhere in the sentence**: `at 5pm`, `12:30 pm`, `19:30`, `noon`, `midnight`, `in 20 minutes`, `in an hour`, shorthand like `10m`, `2h`, `1d`, `1w`, `1h30m`, and days like `today`, `tonight`, `tomorrow`, `friday at 9am`.
-- **Location reminders**: `when I get to Orgrimmar`, `next time I'm in org`, `when I reach Light's Hope Chapel`, or bare `at Ironforge`. Zones, subzones, cities and dungeons are recognised, plus short names (`org`, `sw`, `if`, `uc`, `tb`, `xroads`, `brd`…). They fire when you *arrive*; one made while you're already there waits until you leave and come back. Unknown names are still accepted (with a "did you mean") and matched exactly.
-- **WoW abbreviations**: `org`, `sw`, `if`, `uc`, `tb`, `xr`, `stv`, `epl`, `brd`, `ubrs`, `strat`, `sm lib`, `zg`, `mc`, `bwl`, `aq40`, `naxx`, `wsg`, `ab`, `av`… and `ah`, `fp`, `fm`, `mbox`, `gbank` for NPCs. Times accept `2moro`, `tmrw`, `2nite`, `tonite` and `@5pm`. Short names count anywhere when they're 3+ letters (`buy wine in org`); 2-letter ones need capitals (`repair at IF`) or a phrase (`when I get to if`).
-- **NPC reminders**: `next time I'm at a trainer` / `weapon master`, `mailbox`, `vendor`, `bank`, `auction house`, `flight master`. They fire when that window opens.
-- **Repeating reminders**: `always at 9am`, `every day at 5pm`, `daily`, `every friday at 7pm`, `every 2h`, `every other day`, `every night`, and for places `always when I get to org` / `whenever I'm at a trainer` / `every time I'm in IF`. A repeating reminder schedules itself again when it fires; `/remind done` dismisses the current alert and `/remind delete` stops it.
-- **Priorities**: Low / Normal / High. Set them with words (`quietly`, `low priority`, `urgent`, `important`, `loudly`, `high priority`), `!` for high, or the shorthands `-L`, `-M` (or `-N`) and `-H` anywhere in the reminder (`-low`, `-med`, `-high` also work). Each priority has its own alerts.
-- **Configurable alerts per priority**: chat message, raid-warning text, sound (built-in sounds plus any from LibSharedMedia if another addon provides it), screen edge flash, and taskbar flash when the game is in the background.
-- **On-screen reminder icon**: a round icon that sits beside the minimap mail icon by default, or can be dragged anywhere. Hover to see what's due (coloured by priority); left-click for done, right-click to snooze 10 minutes, shift-click to open the reminder list, ctrl-click for options. Choice of icon, size, opacity, whether it shows only while something is due, and an animation per priority (pulse, glow, ring, sparkles, comet).
-- **Sound picker with preview**: each sound in the list has a play button, and long lists (LibSharedMedia) scroll.
-- **Local or realm clock**: "at 12pm" can follow your PC clock or server time.
-- **Missed reminders**: anything that came due while you were offline fires when you log in, marked as missed.
-- **Reminder list window**: Shift-click the icon or type `/remind list`. Every reminder in priority order, with where / when it triggers, its status, a priority dropdown, and Done / Delete buttons. Resizable; columns fit their content and can be dragged wider (double-click a column edge to reset).
-- **Options panel** in *Esc → Options → AddOns → RemindMe*.
+- **Times:** `in 20 minutes`, `1h30m`, `at 5pm`, `noon`, `tomorrow`, `friday at 9am`, `tmrw`, `@5pm`.
+- **Places:** `when I get to Ironforge`, `next time I'm in org`, `at IF`. It fires when you arrive. It knows the usual short names too: `sw`, `uc`, `brd`, `naxx` and so on.
+- **NPCs:** next time you open a trainer, mailbox, vendor, bank, guild bank, auction house or flight master.
+- **Repeating:** `every day at 5pm`, `daily`, `every 2h`, `always`, `whenever I get to org`.
+- **Priority:** add `-L`, `-M` or `-H` (or say `quietly` / `urgent`, or start with `!`). Each priority gets its own alerts, which you set up in the options.
+- **Reminder list:** Shift-click the icon or type `/remind list` to see everything. You can mark reminders done, delete them or change their priority there.
+- **Missed reminders:** anything that came due while you were offline pops up when you log in.
+
+The icon: left-click marks a reminder done, right-click snoozes it for 10 minutes, Shift-click opens the list and Ctrl-click opens the options. Everything else is in *Esc → Options → AddOns → RemindMe*.
 
 ## Commands
+
+Each reminder gets a letter code (`a`, `b`, `c`…) that stays the same until you finish or delete it.
 
 | Command | What it does |
 |---|---|
 | `/remind <what> <when>` | Add a reminder |
-| `/remind list` | Open the reminder list window (same as Shift-clicking the icon) |
-| `/remind list chat` | Print reminders in chat, each with a short letter code (`a`, `b`, `c`…) |
-| `/remind done <code>` | Complete a reminder, e.g. `/remind done b` (a repeating one is just dismissed until next time) |
-| `/remind delete <code>` | Delete a reminder (stops a repeating one) |
-| `/remind snooze [code] [time]` | Snooze (default: most important due reminder, 10 minutes). Snoozing a place reminder turns it into a timed one |
-| `/remind priority <code> l\|m\|h` | Change a reminder's priority (`low` / `normal` / `high`, `med` and `-h` also work) |
-| `/remind clear` | Remove all fired reminders |
-| `/remind clock local\|server` | Which clock times use |
-| `/remind options` | Open the options panel |
-| `/remind where` | Show the place names RemindMe sees where you're standing |
-| `/remind debug` | Toggle debug output (parses, zone changes, NPC windows) |
+| `/remind list` | Open the reminder list (`list chat` prints it in chat instead) |
+| `/remind done <code>` | Mark it done |
+| `/remind delete <code>` | Delete it |
+| `/remind snooze [code] [time]` | Snooze it (10 minutes by default) |
+| `/remind priority <code> l\|m\|h` | Change its priority |
+| `/remind clear` | Clear everything that has fired |
+| `/remind options` | Open the options |
 
-A reminder keeps its letter code until it's completed or deleted, so `/remind done b` always means the same reminder even after others are added or fire. Freed letters are reused for new reminders.
+There are also `/remind clock local|server`, `/remind where` (the place names it sees where you're standing) and `/remind debug`.
 
-## Roadmap
+## Coming next
 
-- Time and place together: "tomorrow when I get to Ironforge"
-- A reminder list window
+- Time and place together: "tomorrow when I get to Ironforge".
+
+Got an idea or found a bug? [Open an issue](https://github.com/DarynHM/RemindMe-WoW/issues).
 
 ## Development
 
-The addon is plain Lua 5.1 with no dependencies. The natural-language parser (`Parser.lua`) doesn't call any WoW API, so it can be tested outside the game:
-
-```
-luajit tests/run.lua
-```
-
-In game, `/remind debug` prints what each reminder was parsed into and every zone change / NPC window RemindMe sees. For Lua errors, turn on the game's error popups with `/console scriptErrors 1` (or install BugSack + BugGrabber).
+It's plain Lua 5.1 with no dependencies. The parser doesn't touch the WoW API, so you can test it outside the game with `luajit tests/run.lua`.
 
 ## License
 
