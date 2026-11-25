@@ -7,5 +7,6 @@ ignore:
   - README.md
   - CLAUDE.md
   - CHANGELOG.md
+  - docs
   - .previews
   - .github

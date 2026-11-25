@@ -5,16 +5,16 @@
 ```
 /remind in 30m repair
 /remind at 7pm tomorrow raid
-/remind when I get to Orgrimmar, upgrade my weapon skill
+/remind when I get to Orgrimmar, get my weapon skill
 /remind next time I'm at a mailbox, send mats to my alt
 /remind every day at 9am do the daily quests
 ```
 
-Built for **WoW Forever** (Interface 16001).
+Built for **WoW Forever**
 
 ## Why I made it
 
-I kept forgetting things mid-session: train when I'm next in town, sell the junk, check the auction house in an hour. Slack's `/remind` works so well that I wanted the same thing in game. Type it once, then stop thinking about it.
+Slack's `/remind` works so well that I wanted the same thing in game. Type it once, then stop thinking about it.
 
 ## Install
 
@@ -24,14 +24,12 @@ I kept forgetting things mid-session: train when I'm next in town, sell the junk
 ## What it can do
 
 - **Times:** `in 20 minutes`, `1h30m`, `at 5pm`, `noon`, `tomorrow`, `friday at 9am`, `tmrw`, `@5pm`.
-- **Places:** `when I get to Ironforge`, `next time I'm in org`, `at IF`. It fires when you arrive. It knows the usual short names too: `sw`, `uc`, `brd`, `naxx` and so on.
+- **Places:** `when I get to Ironforge`, `next time I'm in org`, `at IF`. It fires when you arrive. It knows the usual short names too: `sw`, `uc` and so on.
 - **NPCs:** next time you open a trainer, mailbox, vendor, bank, guild bank, auction house or flight master.
 - **Repeating:** `every day at 5pm`, `daily`, `every 2h`, `always`, `whenever I get to org`.
 - **Priority:** add `-L`, `-M` or `-H` (or say `quietly` / `urgent`, or start with `!`). Each priority gets its own alerts, which you set up in the options.
 - **Reminder list:** Shift-click the icon or type `/remind list` to see everything. You can mark reminders done, delete them or change their priority there.
 - **Missed reminders:** anything that came due while you were offline pops up when you log in.
-
-The icon: left-click marks a reminder done, right-click snoozes it for 10 minutes, Shift-click opens the list and Ctrl-click opens the options. Everything else is in *Esc → Options → AddOns → RemindMe*.
 
 ## Commands
 

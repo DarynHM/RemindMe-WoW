@@ -122,6 +122,6 @@ Saved variables: `RemindMeDB` (account settings) and `RemindMeCharDB` (per-chara
 
 ## Roadmap / not started
 
-- Time + place together ("tomorrow when I get to IF").
+- Time + place together ("tomorrow when I get to IF"). Design notes and open decisions: `docs/time-and-place.md`.
 - (Done) Reminder list window: `ListWindow.lua`. `ns.OnRemindersChanged` (Core.lua) refreshes both the icon and the window.
 - In-game verification of: the options panel, indicator, priorities and flashes, server clock, missed reminders, place triggers, C_Map availability.
