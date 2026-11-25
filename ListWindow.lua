@@ -410,7 +410,7 @@ local function build()
 
     emptyText = frame:CreateFontString(nil, "ARTWORK", "GameFontDisable")
     emptyText:SetPoint("TOP", scroll, "TOP", 0, -24)
-    emptyText:SetText("No reminders. Add one with /remind, e.g. /remind in 10m check the AH")
+    emptyText:SetText("No reminders.")
 
     -- Size grip, bottom right.
     local grip = CreateFrame("Button", nil, frame)
