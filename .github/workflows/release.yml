@@ -31,4 +31,4 @@ jobs:
           # in the TOC). No WoWInterface / Wago keys are set, so the packager
           # skips those uploads. Tokens go to this step only.
           GITHUB_OAUTH: ${{ secrets.GITHUB_TOKEN }}
-          CF_API_KEY: ${{ secrets.CF_API_KEY }}
+          CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
