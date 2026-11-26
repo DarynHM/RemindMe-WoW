@@ -1,5 +1,9 @@
 # RemindMe
 
+## 0.1.3
+
+- First release on CurseForge.
+
 ## 0.1.2
 
 - The reminder list window now just says "No reminders." when it's empty.
