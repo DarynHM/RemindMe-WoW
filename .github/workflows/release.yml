@@ -27,6 +27,8 @@ jobs:
       - name: Package and release
         uses: BigWigsMods/packager@01e8631a69c69d7654c788d152630d5fed9e3812 # v2.7.0
         env:
-          # Only GitHub Releases: no CurseForge / WoWInterface / Wago keys are
-          # set, so the packager skips those uploads. Token goes to this step only.
+          # GitHub Releases plus CurseForge (project ID from X-Curse-Project-ID
+          # in the TOC). No WoWInterface / Wago keys are set, so the packager
+          # skips those uploads. Tokens go to this step only.
           GITHUB_OAUTH: ${{ secrets.GITHUB_TOKEN }}
+          CF_API_KEY: ${{ secrets.CF_API_KEY }}

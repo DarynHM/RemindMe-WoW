@@ -112,7 +112,7 @@ Saved variables: `RemindMeDB` (account settings) and `RemindMeCharDB` (per-chara
   - `/remind where` shows the current place keys.
   - `/console scriptErrors 1` turns on Lua error popups.
 
-## Releasing (WowUp Hub)
+## Releasing (WowUp Hub and CurseForge)
 
 - **Two identical TOCs:** `RemindMe_Forever.toc` is how WowUp Hub recognises WoW Forever, and `RemindMe.toc` is the fallback if the client ignores the suffix. Edit both together; `tests/run.lua` fails if they differ.
 - **Version:** the TOCs say `## Version: @project-version@`, which the BigWigs packager replaces with the tag. Locally the AddOns list shows the raw token; that's expected.
@@ -120,7 +120,7 @@ Saved variables: `RemindMeDB` (account settings) and `RemindMeCharDB` (per-chara
   1. Add a section to `CHANGELOG.md`.
   2. Commit, then make an annotated tag: `git tag -a vX.Y.Z -m "RemindMe X.Y.Z"`.
   3. Push `main` and the tag (only when the user says so).
-  4. `.github/workflows/release.yml` runs the packager and creates the GitHub release; WowUp Hub picks it up.
+  4. `.github/workflows/release.yml` runs the packager and creates the GitHub release; WowUp Hub picks it up. It also uploads to CurseForge (project 1832911, `## X-Curse-Project-ID` in both TOCs) using the `CF_API_KEY` repo secret; without that secret the packager skips CurseForge.
 - **What the packager leaves out** is set by `.pkgmeta`: `tests`, the docs, `.previews` and `.github`.
 - **Hub extras:**
   - Category comes from the repo topics (`miscellaneous`).

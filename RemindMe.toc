@@ -5,6 +5,7 @@
 ## Version: @project-version@
 ## IconTexture: Interface\Icons\INV_Misc_PocketWatch_01
 ## X-Website: https://github.com/DarynHM/RemindMe-WoW
+## X-Curse-Project-ID: 1832911
 ## SavedVariables: RemindMeDB
 ## SavedVariablesPerCharacter: RemindMeCharDB
 
