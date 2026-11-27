@@ -4,7 +4,7 @@
 
 local ns = {}
 local chunk = assert(loadfile("Parser.lua"))
-chunk("RemindMe", ns)
+chunk("NaturalLanguageReminders", ns)
 local Parser = ns.Parser
 
 local NOW = os.time({ year = 2026, month = 11, day = 21, hour = 10, min = 0, sec = 0 })
@@ -252,7 +252,7 @@ end
 -- WoW abbreviations, using the real dictionary from Places.lua (no C_Map
 -- outside the game, so just its built-in names + aliases)
 do
-    assert(loadfile("Places.lua"))("RemindMe", ns)
+    assert(loadfile("Places.lua"))("NaturalLanguageReminders", ns)
     local REAL = ns.Places.ParserContext()
     local function place(input, message, name, extra)
         local c = ctx(); c.places = REAL
@@ -344,7 +344,7 @@ do
         Clock = { Now = function() return now end, Describe = function() return "?" end },
         Notify = { Fire = function() fired = fired + 1 end },
     }
-    assert(loadfile("Scheduler.lua"))("RemindMe", sns)
+    assert(loadfile("Scheduler.lua"))("NaturalLanguageReminders", sns)
     local S = sns.Scheduler
     local daily = S.Add("stretch", { type = "time", at = ts(21, 17), every = { unit = "day", n = 1 } })
     local hourly = S.Add("water", { type = "time", at = NOW + 3600, every = { unit = "sec", n = 3600 } })
@@ -383,7 +383,7 @@ end
 -- Reminder letter codes (Scheduler.lua with stubbed saved data / clock)
 do
     local sns = { charDB = { reminders = {}, nextId = 1 }, Clock = { Now = function() return NOW end } }
-    assert(loadfile("Scheduler.lua"))("RemindMe", sns)
+    assert(loadfile("Scheduler.lua"))("NaturalLanguageReminders", sns)
     local S = sns.Scheduler
 
     check("code 1", S.CodeFor(1) == "a")
@@ -429,7 +429,7 @@ do
         Clock = { Now = function() return now end, Describe = function() return "?" end },
         Notify = { Fire = function(r, note) fired[#fired + 1] = { r = r, note = note } end },
     }
-    assert(loadfile("Scheduler.lua"))("RemindMe", sns)
+    assert(loadfile("Scheduler.lua"))("NaturalLanguageReminders", sns)
     local S = sns.Scheduler
     local ORG, BARRENS = { orgrimmar = true, durotar = true }, { barrens = true }
 
@@ -482,7 +482,7 @@ do
         settings = { defaultPriority = "normal" },
     }
     sns.PriorityOf = function(r) return r.priority or sns.settings.defaultPriority end
-    assert(loadfile("Scheduler.lua"))("RemindMe", sns)
+    assert(loadfile("Scheduler.lua"))("NaturalLanguageReminders", sns)
     local S = sns.Scheduler
     local lowLater  = S.Add("low later", { type = "time", at = NOW + 600 }, "low")
     local normPlace = S.Add("normal place", { type = "place", kind = "zone", key = "orgrimmar", name = "Orgrimmar", armed = false })
@@ -605,7 +605,7 @@ do
         },
         Places = { IsHere = function(key) return here[key] == true end },
     }
-    assert(loadfile("Scheduler.lua"))("RemindMe", sns)
+    assert(loadfile("Scheduler.lua"))("NaturalLanguageReminders", sns)
     local S = sns.Scheduler
     local ORG, AWAY = { orgrimmar = true }, { durotar = true }
     local function zone(text, extra)
@@ -722,7 +722,7 @@ do
         S.StatusText({ trigger = z({ after = ts(22, 0), before = ts(23, 0) }) }))
 end
 
--- Release packaging: RemindMe.toc (fallback) and RemindMe_Forever.toc (WowUp Hub's
+-- Release packaging: NaturalLanguageReminders.toc (fallback) and NaturalLanguageReminders_Forever.toc (WowUp Hub's
 -- Forever flavour) must stay identical, and every listed file must exist.
 do
     local function read(path)
@@ -732,11 +732,11 @@ do
         f:close()
         return s
     end
-    local base, forever = read("RemindMe.toc"), read("RemindMe_Forever.toc")
-    check("RemindMe.toc exists", base ~= nil)
-    check("RemindMe_Forever.toc exists", forever ~= nil)
+    local base, forever = read("NaturalLanguageReminders.toc"), read("NaturalLanguageReminders_Forever.toc")
+    check("NaturalLanguageReminders.toc exists", base ~= nil)
+    check("NaturalLanguageReminders_Forever.toc exists", forever ~= nil)
     check("TOC files are identical", base == forever,
-        "edit both RemindMe.toc and RemindMe_Forever.toc together")
+        "edit both NaturalLanguageReminders.toc and NaturalLanguageReminders_Forever.toc together")
     for line in (base or ""):gmatch("[^\n]+") do
         if not line:match("^#") and line:match("%S") then
             local file = line:match("^%s*(.-)%s*$")

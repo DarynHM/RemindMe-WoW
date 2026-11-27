@@ -1,4 +1,4 @@
-package-as: RemindMe
+package-as: NaturalLanguageReminders
 
 manual-changelog: CHANGELOG.md
 

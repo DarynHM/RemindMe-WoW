@@ -1,4 +1,4 @@
-# RemindMe architecture (for AI-assisted development)
+# Natural Language Reminders architecture (for AI-assisted development)
 
 How the addon works inside, for an AI agent (or a person) about to change it. `CLAUDE.md` holds the working rules and the design decisions; this file explains the moving parts and how to change them safely.
 
@@ -12,7 +12,7 @@ Commands.addReminder ──► Parser.Parse(text, ctx) ──► { message, trig
    │                        (pure Lua, no WoW API)
    │  converts times to real epoch (Clock.ToReal), sets armed / opened
    ▼
-Scheduler.Add ──► RemindMeCharDB.reminders  (saved per character)
+Scheduler.Add ──► NaturalLanguageRemindersCharDB.reminders  (saved per character)
    │
    │  Something can fire it:
    │    5 s ticker ─────────► Scheduler.Check        (time reminders, snoozes, place windows)
@@ -45,7 +45,7 @@ Everything shares one namespace table, `ns`. Each file gets it via `local _, ns 
 
 ## Data model
 
-A reminder (`RemindMeCharDB.reminders[i]`):
+A reminder (`NaturalLanguageRemindersCharDB.reminders[i]`):
 
 ```lua
 {
@@ -85,7 +85,7 @@ What `every` means:
 
 **Times are stored as real epoch seconds.** The parser works in "virtual" time, shifted by the server-clock offset when the realm clock is selected. `Commands.addReminder` converts `at`, `after` and `before` with `Clock.ToReal` before saving. Any new time field must be converted there too.
 
-Settings live in `RemindMeDB`. Defaults are in `Core.InitDB` (`applyDefaults`), which only fills missing keys, so adding a setting is safe. Rename or remove one by migrating it in `InitDB` (see the animation migration there).
+Settings live in `NaturalLanguageRemindersDB`. Defaults are in `Core.InitDB` (`applyDefaults`), which only fills missing keys, so adding a setting is safe. Rename or remove one by migrating it in `InitDB` (see the animation migration there).
 
 ## Parser
 
@@ -177,7 +177,7 @@ Modes only matter for place windows. For time reminders the word is simply claim
 
 **Add a field to reminders:** saved data persists between versions. Make code treat a missing field as the old behaviour, or migrate in `Core.InitDB` (`CHAR_VERSION`).
 
-**Add a Lua file:** list it in **both** `RemindMe.toc` and `RemindMe_Forever.toc` (the tests fail if they differ). A new file needs a full game restart, not just `/reload`.
+**Add a Lua file:** list it in **both** `NaturalLanguageReminders.toc` and `NaturalLanguageReminders_Forever.toc` (the tests fail if they differ). A new file needs a full game restart, not just `/reload`.
 
 ## Testing
 
@@ -186,8 +186,8 @@ Modes only matter for place windows. For time reminders the word is simply claim
   - `charDB`, `Clock` with a controllable `now`;
   - `Notify.Fire` / `AskAlreadyHere` recorders;
   - `Places.IsHere`.
-  - Then they load `Scheduler.lua` with `loadfile("Scheduler.lua")("RemindMe", sns)`.
-- **Whole-addon smoke test:** stub the WoW globals (`CreateFrame` returning permissive mocks, `SlashCmdList`, the `Get*ZoneText` functions, `print`, `C_Timer`), load every file in TOC order, fire `ADDON_LOADED` and `PLAYER_LOGIN` on the frames, then call `SlashCmdList.REMINDME("...")` and read the captured chat output.
+  - Then they load `Scheduler.lua` with `loadfile("Scheduler.lua")("NaturalLanguageReminders", sns)`.
+- **Whole-addon smoke test:** stub the WoW globals (`CreateFrame` returning permissive mocks, `SlashCmdList`, the `Get*ZoneText` functions, `print`, `C_Timer`), load every file in TOC order, fire `ADDON_LOADED` and `PLAYER_LOGIN` on the frames, then call `SlashCmdList.NATURALLANGUAGEREMINDERS("...")` and read the captured chat output.
 - **In game:**
   - `/remind debug` shows each parse, zone change and NPC event;
   - `/remind where` shows the current place keys;

@@ -51,7 +51,7 @@ Old saved reminders have none of these, so they behave as before.
 - **The ticker (`Check`) handles windows** through `checkWindow`:
   - **When the window closes:** a periodic reminder moves on silently (`advanceWindow`). An unfired one-off fires with the note "(missed: you didn't get to X in time)" and stays in the list.
   - **When the window opens while you're in the zone:** it sets `armed = false` and calls `Notify.AskAlreadyHere`.
-- **The popup** (`StaticPopupDialogs.REMINDME_ALREADY_HERE`):
+- **The popup** (`StaticPopupDialogs.NATURALLANGUAGEREMINDERS_ALREADY_HERE`):
   - "Cancel reminder" deletes a one-off; for a periodic one the button reads "Skip this time" and moves to the next window (`Scheduler.CancelAlreadyHere`).
   - "Next arrival", Escape or closing it keeps the reminder.
   - Popups are queued, one at a time.
@@ -65,7 +65,7 @@ Old saved reminders have none of these, so they behave as before.
 
 ## Morning / night
 
-- `RemindMeDB.morning` / `night` (minutes, default 540 / 1200) reach the parser as `ctx.morning` / `ctx.night` through `Clock.ParserContext`.
+- `NaturalLanguageRemindersDB.morning` / `night` (minutes, default 540 / 1200) reach the parser as `ctx.morning` / `ctx.night` through `Clock.ParserContext`.
 - **Options > Times** has two dropdowns, every 30 minutes:
   - Morning: 5:00 AM to 12:00 PM.
   - Night: 5:00 PM to 11:30 PM.

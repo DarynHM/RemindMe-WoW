@@ -8,7 +8,7 @@ local CHAR_VERSION = 1
 local FIRST_CHECK_DELAY = 5  -- let chat frames finish loading before firing missed reminders
 
 function ns.Print(msg)
-    print("|cff33ff99RemindMe|r: " .. msg)
+    print("|cff33ff99Natural Language Reminders|r: " .. msg)
 end
 
 -- Extra output while /remind debug is on. Arguments are string.format style;
@@ -19,7 +19,7 @@ function ns.Debug(fmt, ...)
     for i = 1, select("#", ...) do
         if type(args[i]) ~= "string" and type(args[i]) ~= "number" then args[i] = tostring(args[i]) end
     end
-    print("|cff888888RemindMe debug: " .. fmt:format(unpack(args, 1, select("#", ...))):gsub("|", "||") .. "|r")
+    print("|cff888888Natural Language Reminders debug: " .. fmt:format(unpack(args, 1, select("#", ...))):gsub("|", "||") .. "|r")
 end
 
 -- Priorities, lowest to highest. Shared by Notify, Indicator, Commands, Options.
@@ -73,8 +73,8 @@ local function applyDefaults(t, defaults)
 end
 
 local function InitDB()
-    RemindMeDB = RemindMeDB or {}
-    local s = RemindMeDB
+    NaturalLanguageRemindersDB = NaturalLanguageRemindersDB or {}
+    local s = NaturalLanguageRemindersDB
 
     applyDefaults(s, { clock = "local", defaultPriority = "normal", debug = false,
         morning = 540, night = 1200 })   -- minutes after midnight: 9am, 8pm
@@ -95,8 +95,8 @@ local function InitDB()
     s.version = SETTINGS_VERSION
     ns.settings = s
 
-    RemindMeCharDB = RemindMeCharDB or {}
-    local c = RemindMeCharDB
+    NaturalLanguageRemindersCharDB = NaturalLanguageRemindersCharDB or {}
+    local c = NaturalLanguageRemindersCharDB
     if (c.version or 0) < CHAR_VERSION then
         c.reminders = c.reminders or {}
         c.nextId = c.nextId or 1

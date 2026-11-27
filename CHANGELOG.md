@@ -1,4 +1,9 @@
-# RemindMe
+# Natural Language Reminders
+
+## 0.2.0
+
+- Renamed from RemindMe to Natural Language Reminders. The `/remind` command is unchanged.
+- The addon folder is now `NaturalLanguageReminders`. Delete the old `RemindMe` folder from your AddOns. Reminders and settings saved under RemindMe don't carry over.
 
 ## 0.1.3
 
@@ -26,5 +31,5 @@ First release, for WoW Forever (Interface 16001).
 - Stable letter codes for `done`, `delete`, `snooze` and `priority`.
 - On-screen icon: round, movable, scalable, adjustable opacity, optional always-on, priority-coloured tooltip, animations (pulse, glow, ring, sparkles, comet). Shift-click opens the reminder list, Ctrl-click opens options.
 - Reminder list window (Shift-click the icon or /remind list): priority order, triggers, status, priority dropdown, Done / Delete; resizable with adjustable columns.
-- Options panel in Esc > Options > AddOns > RemindMe, with sound previews.
+- Options panel in Esc > Options > AddOns > Natural Language Reminders, with sound previews.
 - Local or realm clock; reminders missed while offline fire on login.

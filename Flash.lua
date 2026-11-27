@@ -21,7 +21,7 @@ local function setAlphaAnim(a, from, to)
 end
 
 local function build()
-    local f = CreateFrame("Frame", "RemindMeEdgeFlash", UIParent)
+    local f = CreateFrame("Frame", "NaturalLanguageRemindersEdgeFlash", UIParent)
     f:SetAllPoints(UIParent)
     f:SetFrameStrata("FULLSCREEN_DIALOG")
     f:EnableMouse(false)

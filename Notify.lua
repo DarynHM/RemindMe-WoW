@@ -54,7 +54,7 @@ end
 -- keep it for next arrival (the default: Escape / closing keeps it) or cancel
 -- it (a periodic one just skips this window). One popup at a time.
 local queue = {}
-local POPUP = "REMINDME_ALREADY_HERE"
+local POPUP = "NATURALLANGUAGEREMINDERS_ALREADY_HERE"
 
 local function showNext()
     local r = table.remove(queue, 1)
@@ -76,7 +76,7 @@ function Notify.AskAlreadyHere(r)
     end
     if not StaticPopupDialogs[POPUP] then
         StaticPopupDialogs[POPUP] = {
-            text = "RemindMe: you're already in %s.\n\n|cffffffff%s|r\n\nI'll remind you next time you arrive.",
+            text = "Natural Language Reminders: you're already in %s.\n\n|cffffffff%s|r\n\nI'll remind you next time you arrive.",
             button1 = "Cancel reminder",
             button2 = "Next arrival",
             OnAccept = function(_, data)

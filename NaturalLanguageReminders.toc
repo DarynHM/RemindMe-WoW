@@ -1,13 +1,13 @@
 ## Interface: 16001
-## Title: RemindMe
+## Title: Natural Language Reminders
 ## Notes: Plain-English reminders from a slash command. /remind at 12pm today buy potions
 ## Author: Daryn
 ## Version: @project-version@
 ## IconTexture: Interface\Icons\INV_Misc_PocketWatch_01
-## X-Website: https://github.com/DarynHM/RemindMe-WoW
+## X-Website: https://github.com/DarynHM/NaturalLanguageReminders-WoW
 ## X-Curse-Project-ID: 1832911
-## SavedVariables: RemindMeDB
-## SavedVariablesPerCharacter: RemindMeCharDB
+## SavedVariables: NaturalLanguageRemindersDB
+## SavedVariablesPerCharacter: NaturalLanguageRemindersCharDB
 
 Parser.lua
 Clock.lua

@@ -1,6 +1,6 @@
-# RemindMe
+# Natural Language Reminders
 
-**Set reminders in WoW by typing them the way you'd say them.** RemindMe works out when (or where) you mean and nudges you at the right moment, with a chat message, a sound, a screen flash and a little icon by the minimap.
+**Set reminders in WoW by typing them the way you'd say them.** Natural Language Reminders works out when (or where) you mean and nudges you at the right moment, with a chat message, a sound, a screen flash and a little icon by the minimap.
 
 ```
 /remind in 30m repair
@@ -11,7 +11,7 @@
 /remind every day at 9am do the daily quests
 ```
 
-Built for **WoW Forever**
+Built for **WoW Forever**. (It used to be called RemindMe.)
 
 ## Why I made it
 
@@ -19,8 +19,8 @@ I wanted a quick way to set reminders without leaving the game. Type it once, th
 
 ## Install
 
-- **WowUp:** search for **RemindMe** in Get Addons with your WoW Forever install selected.
-- **Manually:** download the zip from [Releases](https://github.com/DarynHM/RemindMe-WoW/releases) and extract it into `World of Warcraft\_forever_\Interface\AddOns`.
+- **WowUp:** search for **Natural Language Reminders** in Get Addons with your WoW Forever install selected.
+- **Manually:** download the zip from [Releases](https://github.com/DarynHM/NaturalLanguageReminders-WoW/releases) and extract it into `World of Warcraft\_forever_\Interface\AddOns`.
 
 ## What it can do
 
@@ -50,7 +50,7 @@ Each reminder gets a letter code (`a`, `b`, `c`…) that stays the same until yo
 
 There are also `/remind clock local|server`, `/remind where` (the place names it sees where you're standing) and `/remind debug`.
 
-Got an idea or found a bug? [Open an issue](https://github.com/DarynHM/RemindMe-WoW/issues).
+Got an idea or found a bug? [Open an issue](https://github.com/DarynHM/NaturalLanguageReminders-WoW/issues).
 
 ## Development
 

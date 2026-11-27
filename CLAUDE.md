@@ -1,12 +1,14 @@
-# RemindMe (formerly Nudge): project instructions and context
+# Natural Language Reminders (formerly RemindMe, and before that Nudge): project instructions and context
 
-RemindMe (renamed from Nudge before its first public release) is a World of Warcraft addon: natural-language reminders typed as slash commands, such as `/remind at 12pm today buy potions` or `/remind when I get to Orgrimmar, upgrade my weapon skill`. The author is Daryn (GitHub `DarynHM`, formerly `Ki-ches`; repo `DarynHM/RemindMe-WoW`). It is MIT licensed.
+Natural Language Reminders is a World of Warcraft addon: natural-language reminders typed as slash commands, such as `/remind at 12pm today buy potions` or `/remind when I get to Orgrimmar, upgrade my weapon skill`. The author is Daryn (GitHub `DarynHM`, formerly `Ki-ches`; repo `DarynHM/NaturalLanguageReminders-WoW`). It is MIT licensed.
+
+**Names:** it was called Nudge during development, released as RemindMe (0.1.0 to 0.1.3), then renamed Natural Language Reminders in 0.2.0. The addon folder, TOCs, saved variables (`NaturalLanguageRemindersDB` / `NaturalLanguageRemindersCharDB`) and frame names all use `NaturalLanguageReminders`; the slash command stays `/remind`. Saved data from the RemindMe folder does not carry over.
 
 **How the code fits together** (data flow, trigger model, parser pipeline, firing rules, recipes for common changes) is in `.claude/architecture.md`. Read it before changing the parser or scheduler.
 
 ## Working rules (from the user, always follow)
 
-- **Edit the repo, then copy to the game.** The source of truth is `B:\_Projects\WoW\Nudge` (a git repo with the addon files at its root; the local folder keeps its old name). After every change, copy only `*.lua`, `RemindMe.toc` and `RemindMe_Forever.toc` to `G:\Games\World of Warcraft\_forever_\Interface\AddOns\RemindMe`. Never edit the game folder directly.
+- **Edit the repo, then copy to the game.** The source of truth is `B:\_Projects\WoW\Nudge` (a git repo with the addon files at its root; the local folder keeps its old name). After every change, copy only `*.lua`, `NaturalLanguageReminders.toc` and `NaturalLanguageReminders_Forever.toc` to `G:\Games\World of Warcraft\_forever_\Interface\AddOns\NaturalLanguageReminders`. Never edit the game folder directly.
 - **Commit locally; don't push** to GitHub unless asked.
 - **Run the tests before deploying:** `luajit tests/run.lua` (LuaJIT is installed via scoop). Compile-check every file with `luajit -b <file> /dev/null`.
 - **Restart or reload:** a `/reload` is enough unless a file was added to the .toc. Then the game must be restarted; say so.
@@ -40,11 +42,11 @@ RemindMe (renamed from Nudge before its first public release) is a World of Warc
 | `Scheduler.lua` | Reminder list, letter codes, `Check` (time ticker every 5 s), `CheckPlaces`, `CheckNpc`, `Snooze`, `Sorted`, `Fired` |
 | `Indicator.lua` | Movable mail-style icon: tooltip, left-click done, right-click snooze, shift-click list window, ctrl-click options, animations |
 | `Options.lua` | Panel in Esc > Options > AddOns: per-priority alert grid, indicator settings, clock |
-| `ListWindow.lua` | Reminder list window (`/remind list`, Shift-click): rows from `Scheduler.ByPriority`, text from `Scheduler.TriggerText` / `StatusText`, priority dropdown, Done / Delete, resizable, draggable column widths saved in `RemindMeDB.window` |
+| `ListWindow.lua` | Reminder list window (`/remind list`, Shift-click): rows from `Scheduler.ByPriority`, text from `Scheduler.TriggerText` / `StatusText`, priority dropdown, Done / Delete, resizable, draggable column widths saved in `NaturalLanguageRemindersDB.window` |
 | `Commands.lua` | `/remind` (the only slash command). Anything that isn't a management command becomes a new reminder |
 | `Core.lua` | `ns.Print`, `ns.Debug`, priority tables, saved-variable defaults, login startup |
 
-Saved variables: `RemindMeDB` (account settings) and `RemindMeCharDB` (per-character reminders).
+Saved variables: `NaturalLanguageRemindersDB` (account settings) and `NaturalLanguageRemindersCharDB` (per-character reminders).
 
 ## Design decisions already made (don't re-litigate)
 
@@ -63,7 +65,7 @@ Saved variables: `RemindMeDB` (account settings) and `RemindMeCharDB` (per-chara
 **Time parsing**
 - Shorthand: `10m`, `1h30m`, `2d`, `1w`. Clock times: `12pm`, `17:30`, noon, midnight. Days: today, tonight, tomorrow, weekdays.
 - Abbreviations: tmrw / 2moro / 2nite / tonite, and `@5pm`.
-- A day with no time means the morning time; tonight means the night time. Both are options (`RemindMeDB.morning` / `night`, minutes, default 540 = 9am / 1200 = 8pm, a dropdown every 30 min) passed to the parser as `ctx.morning` / `ctx.night`. A time already passed today is an error.
+- A day with no time means the morning time; tonight means the night time. Both are options (`NaturalLanguageRemindersDB.morning` / `night`, minutes, default 540 = 9am / 1200 = 8pm, a dropdown every 30 min) passed to the parser as `ctx.morning` / `ctx.night`. A time already passed today is an error.
 - Day parts: `tomorrow morning`, `friday night` / `evening`, `this morning`, `this evening`, `in the morning` (tomorrow once this morning has passed). A part also settles an ambiguous clock ("friday night at 9" = 9pm).
 
 **Place triggers**
@@ -92,7 +94,7 @@ Saved variables: `RemindMeDB` (account settings) and `RemindMeCharDB` (per-chara
   - Only phrase places combine with a time; bare places (`at IF`) still need no time.
   - Window words: `after` / `from` / `starting` and `before` / `by` / `until`, claimed only straight before a time or day. Without a place they just set the time.
   - A day lasts only that day. A one-off whose window closes unfired alerts as missed; a periodic one (`every day when I get to org`, `every = { unit = "day", n }`) moves on silently. `every 2h when in org` is a cooldown (`{ unit = "sec", n }`); "whenever" plus a time sets `each` (every arrival inside the window).
-  - Already in the zone when the window opens: popup (`StaticPopupDialogs.REMINDME_ALREADY_HERE`) with Cancel reminder (Skip this time for periodic) / Next arrival; Escape keeps it.
+  - Already in the zone when the window opens: popup (`StaticPopupDialogs.NATURALLANGUAGEREMINDERS_ALREADY_HERE`) with Cancel reminder (Skip this time for periodic) / Next arrival; Escape keeps it.
 - **A fired reminder stays in the list** until it's done, deleted or snoozed. Reminders that came due while offline fire on login, marked "missed".
 
 ## Gotchas learned the hard way
@@ -106,7 +108,7 @@ Saved variables: `RemindMeDB` (account settings) and `RemindMeCharDB` (per-chara
 ## Testing and debugging
 
 - `tests/run.lua` covers the parser, letter codes, place arming, NPC firing and abbreviations (611 checks at the time of writing).
-- Smoke harnesses with stubbed WoW globals have been used to run the real `/remind` handler offline. Recreate one if needed: stub `SlashCmdList`, `CreateFrame`, the `Get*ZoneText` functions and `print`, then load the addon files with `loadfile(f)("RemindMe", ns)`.
+- Smoke harnesses with stubbed WoW globals have been used to run the real `/remind` handler offline. Recreate one if needed: stub `SlashCmdList`, `CreateFrame`, the `Get*ZoneText` functions and `print`, then load the addon files with `loadfile(f)("NaturalLanguageReminders", ns)`.
 - **In game:**
   - `/remind debug` shows parses, zone changes and NPC events.
   - `/remind where` shows the current place keys.
@@ -114,11 +116,11 @@ Saved variables: `RemindMeDB` (account settings) and `RemindMeCharDB` (per-chara
 
 ## Releasing (WowUp Hub and CurseForge)
 
-- **Two identical TOCs:** `RemindMe_Forever.toc` is how WowUp Hub recognises WoW Forever, and `RemindMe.toc` is the fallback if the client ignores the suffix. Edit both together; `tests/run.lua` fails if they differ.
+- **Two identical TOCs:** `NaturalLanguageReminders_Forever.toc` is how WowUp Hub recognises WoW Forever, and `NaturalLanguageReminders.toc` is the fallback if the client ignores the suffix. Edit both together; `tests/run.lua` fails if they differ.
 - **Version:** the TOCs say `## Version: @project-version@`, which the BigWigs packager replaces with the tag. Locally the AddOns list shows the raw token; that's expected.
 - **To release:**
   1. Add a section to `CHANGELOG.md`.
-  2. Commit, then make an annotated tag: `git tag -a vX.Y.Z -m "RemindMe X.Y.Z"`.
+  2. Commit, then make an annotated tag: `git tag -a vX.Y.Z -m "Natural Language Reminders X.Y.Z"`.
   3. Push `main` and the tag (only when the user says so).
   4. `.github/workflows/release.yml` runs the packager and creates the GitHub release; WowUp Hub picks it up. It also uploads to CurseForge (project 1832911, `## X-Curse-Project-ID` in both TOCs) using the `CF_API_TOKEN` repo secret (token from https://authors.curseforge.com/#/settings/api-tokens); without that secret the packager skips CurseForge.
 - **What the packager leaves out** is set by `.pkgmeta`: `tests`, the docs, `.previews` and `.github`.

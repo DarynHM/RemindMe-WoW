@@ -345,7 +345,7 @@ end
 ---------------------------------------------------------------------------
 
 local function build()
-    local b = CreateFrame("Button", "RemindMeIndicator", UIParent)
+    local b = CreateFrame("Button", "NaturalLanguageRemindersIndicator", UIParent)
     b:SetSize(31, 31)
     b:SetFrameStrata("MEDIUM")
     b:SetFrameLevel(8)

@@ -69,7 +69,7 @@ local function showHelp()
     cmd("/remind clear", "remove fired reminders")
     cmd("/remind clock <local / server>", "which clock times use")
     cmd("/remind options", "open settings")
-    cmd("/remind where", "show the place names RemindMe sees where you stand")
+    cmd("/remind where", "show the place names the addon sees where you stand")
     cmd("/remind debug", "toggle debug output")
 end
 
@@ -250,11 +250,11 @@ end
 
 ns.Commands = { ShowList = showList }
 
-SlashCmdList["REMINDME"] = function(msg)
+SlashCmdList["NATURALLANGUAGEREMINDERS"] = function(msg)
     if not ns.ready then
         ns.Print("still loading, try again in a moment.")
         return
     end
     handle(msg)
 end
-SLASH_REMINDME1 = "/remind"
+SLASH_NATURALLANGUAGEREMINDERS1 = "/remind"

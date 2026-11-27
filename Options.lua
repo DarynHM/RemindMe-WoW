@@ -7,7 +7,7 @@ local AddonName, ns = ...
 local Options = {}
 ns.Options = Options
 
-local PANEL_NAME = "RemindMe"
+local PANEL_NAME = "Natural Language Reminders"
 local panel
 local refreshers = {}   -- functions that sync widgets from settings (run on show)
 
@@ -42,7 +42,7 @@ local checkCount = 0
 -- text = nil gives a bare checkbox (for grids); tipTitle names it in the tooltip.
 local function checkbox(parent, text, tooltip, x, y, get, set, tipTitle)
     checkCount = checkCount + 1
-    local name = "RemindMeOptCheck" .. checkCount
+    local name = "NaturalLanguageRemindersOptCheck" .. checkCount
     local cb = CreateFrame("CheckButton", name, parent, "UICheckButtonTemplate")
     cb:SetPoint("TOPLEFT", x, y)
     local fs = cb.Text or cb.text or _G[name .. "Text"]
@@ -149,7 +149,7 @@ end
 -- preview (optional): function(value), adds a play button to each row.
 local function dropdown(parent, x, y, width, getOptions, get, set, preview)
     dropCount = dropCount + 1
-    local name = "RemindMeOptDrop" .. dropCount
+    local name = "NaturalLanguageRemindersOptDrop" .. dropCount
 
     local function labelFor(value)
         for _, o in ipairs(getOptions()) do
@@ -239,7 +239,7 @@ local function dropdown(parent, x, y, width, getOptions, get, set, preview)
 end
 
 local function slider(parent, text, x, y, minV, maxV, step, get, set)
-    local name = "RemindMeOptSlider" .. text:gsub("%W", "")
+    local name = "NaturalLanguageRemindersOptSlider" .. text:gsub("%W", "")
     local s = CreateFrame("Slider", name, parent, "OptionsSliderTemplate")
     s:SetPoint("TOPLEFT", x, y)
     s:SetWidth(200)
@@ -282,11 +282,11 @@ local ANIMATIONS = {
 }
 
 local function buildPanel()
-    panel = CreateFrame("Frame", "RemindMeOptionsPanel")
+    panel = CreateFrame("Frame", "NaturalLanguageRemindersOptionsPanel")
     panel.name = PANEL_NAME
 
     -- Everything lives in a scroll child so the page can grow.
-    local scroll = CreateFrame("ScrollFrame", "RemindMeOptionsScroll", panel, "UIPanelScrollFrameTemplate")
+    local scroll = CreateFrame("ScrollFrame", "NaturalLanguageRemindersOptionsScroll", panel, "UIPanelScrollFrameTemplate")
     scroll:SetPoint("TOPLEFT", 0, -4)
     scroll:SetPoint("BOTTOMRIGHT", -28, 4)
     local content = CreateFrame("Frame", nil, scroll)

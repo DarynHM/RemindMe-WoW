@@ -1,4 +1,4 @@
-REMINDME IN-GAME TEST CHECKLIST
+NATURAL LANGUAGE REMINDERS IN-GAME TEST CHECKLIST
 One command per line. Replace <angle brackets> with your own value.
 Lines starting with "--" are notes, not commands.
 
@@ -89,7 +89,7 @@ Lines starting with "--" are notes, not commands.
 -- Open a mailbox: fires
 
 -- MORNING / NIGHT
--- Esc > Options > AddOns > RemindMe > Times: set Morning to 7:30 AM, Night to 10:00 PM
+-- Esc > Options > AddOns > Natural Language Reminders > Times: set Morning to 7:30 AM, Night to 10:00 PM
 /remind tomorrow morning tp morning
 /remind tonight tp night
 -- Confirmations say tomorrow 7:30 AM and today 10:00 PM

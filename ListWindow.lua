@@ -11,7 +11,7 @@ local _, ns = ...
 local ListWindow = {}
 ns.ListWindow = ListWindow
 
-local FRAME_NAME = "RemindMeListFrame"
+local FRAME_NAME = "NaturalLanguageRemindersListFrame"
 local ROW_H = 26
 local PAD = 6                        -- text padding inside a column
 local MIN_W, MIN_H = 480, 170
@@ -300,7 +300,7 @@ local function createFrame()
         close:SetPoint("TOPRIGHT", f, "TOPRIGHT", -4, -4)
         top, bottom = -32, 22
     end
-    setTitle(f, "RemindMe")
+    setTitle(f, "Natural Language Reminders")
     f:SetFrameStrata("DIALOG")
     f:SetToplevel(true)
     f:SetClampedToScreen(true)
@@ -401,7 +401,7 @@ local function build()
         end
     end
 
-    scroll = CreateFrame("ScrollFrame", "RemindMeListScroll", frame, "UIPanelScrollFrameTemplate")
+    scroll = CreateFrame("ScrollFrame", "NaturalLanguageRemindersListScroll", frame, "UIPanelScrollFrameTemplate")
     scroll:SetPoint("TOPLEFT", header, "BOTTOMLEFT", 0, -2)
     scroll:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -32, bottom)
     list = CreateFrame("Frame", nil, scroll)

@@ -1,7 +1,7 @@
 -- Scheduler.lua
 -- Owns the reminder list and fires time reminders when they come due.
 --
--- Reminder record (RemindMeCharDB.reminders[i]):
+-- Reminder record (NaturalLanguageRemindersCharDB.reminders[i]):
 --   { id, code = "a"|"b"|..., text, created,
 --     priority = "low"|"normal"|"high"|nil (nil = default),
 --     trigger = { type = "time", at = epoch }
